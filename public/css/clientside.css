@@ -44,9 +44,9 @@ div.login-row input
 	left: 20px;
 }
 
-#timeleft-box, #ranking-box
+#timeleft-box, #ranking-box, #problems-box
 {
-	padding: 10px;
+	padding: 5px 10px;
 	width: 180px;
 	background-color: rgb(247, 247, 247);
 	margin-bottom: 10px;
@@ -62,4 +62,28 @@ div.login-row input
 	{
 		text-align: right;
 		font-weight: bold;
+	}
+
+#problems-box
+{
+	padding: 0;
+	width: 200px;
+	font-size: 14px;
+}
+
+	#problems-box div.ui-widget-header
+	{
+		border-width: 0;
+		border-bottom-width: 1px;
+		border-top-left-radius: 1px;
+		border-top-right-radius: 1px;
+		font-weight: normal;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+		padding: 5px 10px;
+		
+	}
+	
+	#problems-contents div.ui-button
+	{
+		width: 100%;
 	}
