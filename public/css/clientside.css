@@ -36,3 +36,30 @@ div.login-row input
 	padding: 2px;
 	border-radius: 1px;
 }
+
+#sidepanel
+{
+	position: fixed;
+	top: 65px;
+	left: 20px;
+}
+
+#timeleft-box, #ranking-box
+{
+	padding: 10px;
+	width: 180px;
+	background-color: rgb(247, 247, 247);
+	margin-bottom: 10px;
+}
+
+	#timeleft-box div:nth-of-type(1), #ranking-box div:nth-of-type(1)
+	{
+		font-size: 14px;
+		text-align: left;
+	}
+
+	#timeleft-box div:nth-of-type(2), #ranking-box div:nth-of-type(2)
+	{
+		text-align: right;
+		font-weight: bold;
+	}

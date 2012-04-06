@@ -1,6 +1,6 @@
 $(document).ready(function() {
 	$('#login-form').dialog({
-		autoOpen: true,
+		autoOpen: false,
 		height: 240,
 		width: 400,
 		modal: true,
@@ -10,4 +10,8 @@ $(document).ready(function() {
 			"Cancel": function() {}
 		}
 	});
+	
+	$('#ranking-box').hover(function() {$(this).addClass('ui-state-hover')}, function() {$(this).removeClass('ui-state-hover')});
+	$('#ranking-box').mousedown(function() {$(this).addClass('ui-state-focus')});
+	$('#ranking-box').mouseup(function() {$(this).removeClass('ui-state-focus')});
 });
