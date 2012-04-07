@@ -557,7 +557,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 .ui-dialog .ui-dialog-titlebar-close:hover, .ui-dialog .ui-dialog-titlebar-close:focus { padding: 0; border: 0; }
 .ui-dialog .ui-dialog-content { position: relative; border: 0;
 	background-color: rgb(247, 247, 247); overflow: auto; zoom: 1;
-	padding: .7em 1em;
+	padding: .6em 1em;
 }
 .ui-dialog .ui-dialog-buttonpane { text-align: left; border-width: 1px 0 0 0; background-color: rgb(242, 242, 242); margin: 0;
 	padding: .3em 1em .3em .4em;
