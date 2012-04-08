@@ -22,4 +22,6 @@ $(document).ready(function() {
 	$('#problems-contents div').mousedown(function() {$(this).addClass('ui-state-focus')});
 	$('#problems-contents div').mouseup(function() {$(this).removeClass('ui-state-focus')});
 	$('#problems-contents div:last-child').addClass('ui-corner-bottom');
+	
+	$('#scoreboard-headrow div').addClass('ui-widget ui-widget-header');
 });

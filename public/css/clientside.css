@@ -57,6 +57,7 @@ div.login-row input
 	position: fixed;
 	top: 70px;
 	left: 20px;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 #timeleft-box, #ranking-box, #problems-box
@@ -89,24 +90,104 @@ div.login-row input
 	#problems-box div.ui-widget-header
 	{
 		font-weight: normal;
-		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 		padding: 5px 10px;
 		margin: -1px -1px 0;
 	}
+
+#problems-contents
+{
+	position: relative;
+}
 	
 	#problems-contents div
 	{
-		width: 180px;
+		position: relative;
+		width: 182px;
 		text-align: left;
 		padding: 5px 10px;
 		background-color: rgb(247, 247, 247);
 		box-shadow: none;
+		border-width: 0;
+		margin: 0 -1px;
+	}
+		
+		#problems-contents div span:first-child
+		{
+			display: inline-block;
+			width: 20px;
+			text-align: right;
+		}
+		
+			#problems-contents div span:first-child::after
+			{
+				content: '.';
+			}
+			
+			#problems-contents div span:last-child
+		{	
+			position: absolute;
+			left: 35px;
+		}
+		
+	#problems-contents div:first-child
+	{
+		position: absolute;
+		z-index: 1;
+		width: auto;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		border-width: 1px;
 		margin: -1px;
+		pointer-events: none;
+		background: none;
 	}
 
-.no-select
+#scoreboard-box
 {
-	user-select: none;
-	-webkit-user-select: none;
-	-moz-user-select: none;
+	position: absolute;
+	top: 70px;
+	right: 20px;
+	bottom: 20px;
+	left: 240px;
 }
+
+#scoreboard-header
+{
+	background-color: rgb(247, 247, 247);
+	width: 100%;
+	padding: 10px 0;
+	text-align: center;
+	margin: -1px;
+}
+
+#scoreboard-headrow
+{
+	font-size: 0;
+	border-width: 0;
+	display: table;
+	width: 100%;
+}
+	
+	#scoreboard-headrow div
+	{
+		display: table-cell;
+		font-size: 14px;
+		font-weight: normal;
+		padding: 5px 10px;
+		width: auto;
+		margin: 0 -1px;
+		border-right-width: 0;
+		width: 1px;
+	}
+	
+	#scoreboard-headrow div:first-child
+	{
+		border-left-width: 0;
+	}
+	
+	#scoreboard-headrow div:nth-child(2)
+	{
+		width: inherit;
+	}
