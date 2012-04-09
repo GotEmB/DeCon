@@ -162,17 +162,19 @@ div.login-row input
 	margin: -1px;
 }
 
-#scoreboard-headrow
+#scoreboard-data
+{
+	width: 100%;
+	border-spacing: 0;
+}
+
+#scoreboard-data tr
 {
 	font-size: 0;
-	border-width: 0;
-	display: table;
-	width: 100%;
 }
 	
-	#scoreboard-headrow div
+	#scoreboard-data tr th, #scoreboard-data tr td
 	{
-		display: table-cell;
 		font-size: 14px;
 		font-weight: normal;
 		padding: 5px 10px;
@@ -180,14 +182,31 @@ div.login-row input
 		margin: 0 -1px;
 		border-right-width: 0;
 		width: 1px;
+		text-align: center;
 	}
 	
-	#scoreboard-headrow div:first-child
+	#scoreboard-data tr td
+	{
+		border-width: 0 0 0 1px;
+	}
+	
+	#scoreboard-data tr:nth-child(2n+1) td
+	{
+		background-color: rgb(247, 247, 247)
+	}
+	
+	#scoreboard-data tr:last-child td
+	{
+		border-bottom-width: 1px;
+	}
+	
+	#scoreboard-data tr th:first-child, #scoreboard-data tr td:first-child
 	{
 		border-left-width: 0;
 	}
 	
-	#scoreboard-headrow div:nth-child(2)
+	#scoreboard-data tr th:nth-child(2), #scoreboard-data tr td:nth-child(2)
 	{
 		width: inherit;
+		text-align: left;
 	}
