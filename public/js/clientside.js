@@ -25,4 +25,8 @@ $(document).ready(function() {
 	
 	$('#scoreboard-data tr th').addClass('ui-widget ui-widget-header');
 	$('#scoreboard-data tr td').addClass('ui-widget ui-widget-content');
+	
+	var editor = ace.edit('editor');
+	var JavaScriptMode = require("ace/mode/javascript").Mode;
+	editor.getSession().setMode(new JavaScriptMode());
 });
