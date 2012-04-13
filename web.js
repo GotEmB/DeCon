@@ -5,7 +5,7 @@ var server = express.createServer(
 );
 
 server.get('/*', function (req, res) {
-	res.send('You hack me?<br>Fus-Ro-Dah!');
+	res.send('You hack me?<br>403! 404! Fus-Ro-Dah !!!');
 });
 
 var port = process.env.PORT || 3000;
