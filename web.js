@@ -2,8 +2,12 @@ var express = require('express');
 var url = require('url');
 var db = require('mongojs').connect('mongodb://decon-admin:YUSoConfused?@ds031867.mongolab.com:31867/decon', ['Teams']);
 var md5 = require('MD5');
+var fs = require('fs');
 
 //db.Teams.save({teamname: "Code Kangaroos", password: md5("Camelroos" + "hb7gyfw")});
+
+var problems = JSON.parse(fs.readFileSync('problems/index.json', 'utf8'));
+console.log("Parsed Problems");
 
 var server = express.createServer(
 	express.logger(),
@@ -12,6 +16,21 @@ var server = express.createServer(
 	express.bodyParser(),
 	express.static(__dirname + '/public')
 );
+
+//Problem List
+server.get('/problems', function (req, res) {
+	var ret = [];
+	for (var key in problems)
+		if (key != '__proto__')
+			ret.push(key);
+	res.send(JSON.stringify(ret));
+});
+
+//Problem Statement
+server.get('/problems/:p', function (req, res) {
+	var p = problems[req.params.p];
+	res.send(JSON.stringify(p));
+});
 
 //Authentication
 server.get('/*', function (req, res, next) {

@@ -1,10 +1,10 @@
 {
 	"Hello World!": {
-		"language" : "c++",
-		"folder" : "helloworld"
-	},
-	"You Said What?": {
-		"language" : "ruby",
-		"folder" : "yousaidwhat"
+		"folder": "helloworld",
+		"points": 1,
+		"editable": ["source.cpp"],
+		"jobs": {
+			"source.cpp": "c++"
+		}
 	}
 }
