@@ -144,22 +144,39 @@ div.login-row input
 		background: none;
 	}
 
-#scoreboard-box
+#scoreboard-box, #problem-box
 {
-	position: absolute;
+	display: none;
+	position: fixed;
 	top: 70px;
 	right: 20px;
 	bottom: 20px;
 	left: 240px;
+	overflow: hidden;
 }
 
-#scoreboard-header
+#scoreboard-header, #problem-header
 {
 	background-color: rgb(247, 247, 247);
 	width: 100%;
-	padding: 10px 0;
+	padding: 10px 0 9px;
 	text-align: center;
 	margin: -1px;
+}
+
+#scoreboard-container, #problem-container
+{
+	position: absolute;
+	width: 100%;
+	top: 41px;
+	bottom: 0;
+	overflow-x: inherit;
+	overflow-y: scroll;
+}
+
+#scoreboard-container
+{
+	margin-bottom: -1px;
 }
 
 #scoreboard-data
@@ -172,6 +189,11 @@ div.login-row input
 {
 	font-size: 0;
 }
+
+	#scoreboard-data tr th
+	{
+		border-top-width: 0;
+	}
 	
 	#scoreboard-data tr th, #scoreboard-data tr td
 	{

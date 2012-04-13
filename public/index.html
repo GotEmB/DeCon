@@ -46,85 +46,65 @@
 		</div>
 		<div id="scoreboard-box" class="ui-widget ui-widget-content ui-corner-top ui-corner-bottom">
 			<div id="scoreboard-header" class="ui-widget ui-widget-content ui-corner-top">Scoreboard</div>
-			<table id="scoreboard-data">
-				<tr class="ui-widget ui-widget-header">
-					<th>Rank</th>
-					<th>Success Kid</th>
-					<th>Score</th>
-					<th>Penalty</th>
-					<th>1</th>
-					<th>2</th>
-					<th>3</th>
-				</tr>
-				<tr id="scoreboard-rows">
-					<td>1</div>
-					<td>Jamas Mog</td>
-					<td>3</td>
-					<td>12:23:43</td>
-					<td>&#10004;</td>
-					<td>&#10004;</td>
-					<td>&#10004;</td>
-				</tr>
-				<tr>
-					<td>2</td>
-					<td>Tejas Gawle</td>
-					<td>2</td>
-					<td>08:07:36</td>
-					<td>&#10004;</td>
-					<td></td>
-					<td>&#10004;</td>
-				</tr>
-				<tr>
-					<td>3</td>
-					<td>GotEmB</td>
-					<td>2</td>
-					<td>09:23:04</td>
-					<td>&#10004;</td>
-					<td>&#10004;</td>
-					<td></td>
-				</tr>
-				<tr>
-					<td>4</td>
-					<td>Jush Muneja</td>
-					<td>1</td>
-					<td>05:02:15</td>
-					<td>&#10004;</td>
-					<td></td>
-					<td></td>
-				</tr>
-			</table>
-			<div id="editor">$(document).ready(function() {
-	$('#login-form').dialog({
-		autoOpen: false,
-		show: 'fade',
-		hide: 'fade',
-		height: 240,
-		width: 400,
-		modal: true,
-		resizable: false,
-		buttons: {
-			"Login": function() {},
-			"Cancel": function() {$('#login-form').dialog('close')}
-		}
-	});
-	$('#login-button').button().click(function() {$('#login-form').dialog('open')});
-	
-	$('#ranking-box').hover(function() {$(this).addClass('ui-state-hover')}, function() {$(this).removeClass('ui-state-hover')});
-	$('#ranking-box').mousedown(function() {$(this).addClass('ui-state-focus')});
-	$('#ranking-box').mouseup(function() {$(this).removeClass('ui-state-focus')});
-	
-	$('#problems-contents div').hover(function() {$(this).addClass('ui-state-hover')}, function() {$(this).removeClass('ui-state-hover')});
-	$('#problems-contents div').mousedown(function() {$(this).addClass('ui-state-focus')});
-	$('#problems-contents div').mouseup(function() {$(this).removeClass('ui-state-focus')});
-	$('#problems-contents div:last-child').addClass('ui-corner-bottom');
-	
-	$('#scoreboard-data tr th').addClass('ui-widget ui-widget-header');
-	$('#scoreboard-data tr td').addClass('ui-widget ui-widget-content');
-	
-	var editor = ace.edit('editor');
-	var JavaScriptMode = require("ace/mode/javascript").Mode;
-	editor.getSession().setMode(new JavaScriptMode());
-});</div>
+			<div id="scoreboard-container">
+				<table id="scoreboard-data">
+					<thead>
+						<tr class="ui-widget ui-widget-header">
+							<th>Rank</th>
+							<th>Success Kid</th>
+							<th>Score</th>
+							<th>Penalty</th>
+							<th>1</th>
+							<th>2</th>
+							<th>3</th>
+						</tr>
+					</thead>
+					<tr id="scoreboard-rows">
+						<td>1</div>
+						<td>Jamas Mog</td>
+						<td>3</td>
+						<td>12:23:43</td>
+						<td>&#10004;</td>
+						<td>&#10004;</td>
+						<td>&#10004;</td>
+					</tr>
+					<tr>
+						<td>2</td>
+						<td>Tejas Gawle</td>
+						<td>2</td>
+						<td>08:07:36</td>
+						<td>&#10004;</td>
+						<td></td>
+						<td>&#10004;</td>
+					</tr>
+					<tr>
+						<td>3</td>
+						<td>GotEmB</td>
+						<td>2</td>
+						<td>09:23:04</td>
+						<td>&#10004;</td>
+						<td>&#10004;</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>4</td>
+						<td>Jush Muneja</td>
+						<td>1</td>
+						<td>05:02:15</td>
+						<td>&#10004;</td>
+						<td></td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+		
+		<div id="problem-box" class="ui-widget ui-widget-content ui-corner-top ui-corner-bottom">
+			<div id="problem-header" class="ui-widget ui-widget-content ui-corner-top">Sample Problem</div>
+			<div id="problem-container">
+				
+			</div>
 		</div>
 	</body>
 </html>
