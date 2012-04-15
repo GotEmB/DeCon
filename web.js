@@ -9,37 +9,35 @@ var Sync = require('sync');
 
 //db.Teams.save({teamname: "Code Kangaroos", password: md5("Camelroos" + "hb7gyfw")});
 
-Sync(function () {
-	var problems = JSON.parse(fs.readFile.sync(null, 'problems/index.json', 'utf8'));
-	
-	var server = express.createServer(
-		express.logger(),
-		express.cookieParser(),
-		express.session({key: "auth.sid", secret: 'badampam-pshh!h34uhif3'}),
-		express.bodyParser(),
-		express.static(__dirname + '/public')
-	);
-	
-	//Problem List (Guest)
-	server.get('/problems', function (req, res, next) {
-		req.ret = [];
-		for (var key in problems)
-			if (key != '__proto__')
-				req.ret.push({title: key});
-		next();
-	});
-	
-	//Problem Statement (Guest)
-	server.get('/problems/:p', function (req, res, next) {
-		req.ret = {};
-		var p = problems[req.params.p];
-		req.ret.description = md(fs.readFileSync('problems/' + p.folder + '/description.md', 'utf8'));
-		req.ret.points = p.points;
-		next();
-	});
-	
-	//Authentication
-	server.get('/*', function (req, res, next) {
+var server = express.createServer(
+	express.logger(),
+	express.cookieParser(),
+	express.session({key: "auth.sid", secret: 'badampam-pshh!h34uhif3'}),
+	express.bodyParser(),
+	express.static(__dirname + '/public')
+);
+
+//Problem List (Guest)
+server.get('/problems', function (req, res, next) {
+	req.ret = [];
+	for (var key in problems)
+		if (key != '__proto__')
+			req.ret.push({title: key});
+	next();
+});
+
+//Problem Statement (Guest)
+server.get('/problems/:p', function (req, res, next) {
+	req.ret = {};
+	var p = problems[req.params.p];
+	req.ret.description = md(fs.readFileSync('problems/' + p.folder + '/description.md', 'utf8'));
+	req.ret.points = p.points;
+	next();
+});
+
+//Authentication
+server.get('/*', function (req, res, next) {
+	Sync(function () {
 		var lurl = url.parse(req.url, true);
 		if (lurl.pathname == "/logout")
 		{
@@ -64,31 +62,37 @@ Sync(function () {
 			res.send(JSON.stringify(req.ret));
 		else
 			res.send("Who d'ya think you are?<br>403! Joor-Zah-Frul !!!");
-	});
-	
-	function setUpFileDump(teamname) {
-		for (var problemTitle in problems)
-			if (problemTitle != '__proto__')
-				problems[problemTitle].editable.forEach(function (fileName) {
-					if (db.FileDump.find({team: teamname, problem: problemTitle, file: fileName}).count.sync(null) == 0)
-						db.FileDump.save.sync(null, {team: teamname, problem: problemTitle, file: fileName, data: fs.readFileSync('problems/' + problems[problemTitle].folder + '/editable/' + fileName)});
-				});
-	}
-	
-	//Problem List (User)
-	server.get('/problems', function (req, res, next) {
-		res.send(JSON.stringify(req.ret));
-	});
-	
-	//Problem Statement (User)
-	server.get('/problems/:p', function (req, res, next) {
-		res.send(JSON.stringify(req.ret));
-	});
-	
-	//404
-	server.get('/*', function (req, res) {
-		res.send('You hack me?<br>404! Fus-Ro-Dah !!!');
-	});
+	})
+});
+
+function setUpFileDump(teamname) {
+	for (var problemTitle in problems)
+		if (problemTitle != '__proto__')
+			problems[problemTitle].editable.forEach(function (fileName) {
+				if (db.FileDump.find({team: teamname, problem: problemTitle, file: fileName}).count.sync(null) == 0)
+					db.FileDump.save.sync(null, {team: teamname, problem: problemTitle, file: fileName, data: fs.readFileSync('problems/' + problems[problemTitle].folder + '/editable/' + fileName)});
+			});
+}
+
+//Problem List (User)
+server.get('/problems', function (req, res, next) {
+	res.send(JSON.stringify(req.ret));
+});
+
+//Problem Statement (User)
+server.get('/problems/:p', function (req, res, next) {
+	res.send(JSON.stringify(req.ret));
+});
+
+//404
+server.get('/*', function (req, res) {
+	res.send('You hack me?<br>404! Fus-Ro-Dah !!!');
+});
+
+//Start...
+Sync(function () {
+	var problems = JSON.parse(fs.readFile.sync(null, 'problems/index.json', 'utf8'));
+	var ct = db.Teams.find({teamname: "teamdoesnotexist"}).count.sync(null);
 	
 	var port = process.env.PORT || 5000;
 	server.listen(port, function() {
