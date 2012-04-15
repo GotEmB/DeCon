@@ -1,68 +1,97 @@
 var express = require('express');
 var url = require('url');
-var db = require('mongojs').connect('mongodb://decon-admin:YUSoConfused?@ds031867.mongolab.com:31867/decon', ['Teams']);
+var db = require('mongojs').connect(process.env.MONGOLAB_URI, ['Teams', 'FileDump']);
 var md5 = require('MD5');
 var fs = require('fs');
+var md = require('node-markdown').Markdown;
+var Sync = require('sync');
+
 
 //db.Teams.save({teamname: "Code Kangaroos", password: md5("Camelroos" + "hb7gyfw")});
 
-var problems = JSON.parse(fs.readFileSync('problems/index.json', 'utf8'));
-console.log("Parsed Problems");
-
-var server = express.createServer(
-	express.logger(),
-	express.cookieParser(),
-	express.session({key: "auth.sid", secret: 'badampam-pshh!h34uhif3' }),
-	express.bodyParser(),
-	express.static(__dirname + '/public')
-);
-
-//Problem List
-server.get('/problems', function (req, res) {
-	var ret = [];
-	for (var key in problems)
-		if (key != '__proto__')
-			ret.push(key);
-	res.send(JSON.stringify(ret));
-});
-
-//Problem Statement
-server.get('/problems/:p', function (req, res) {
-	var p = problems[req.params.p];
-	res.send(JSON.stringify(p));
-});
-
-//Authentication
-server.get('/*', function (req, res, next) {
-	var lurl = url.parse(req.url, true);
-	if (lurl.pathname == "/logout")
-	{
-		req.session.destroy();
-		res.send("You will be remembered.");
-	}
-	else if (req.session && req.session.auth == true)
+Sync(function () {
+	var problems = JSON.parse(fs.readFile.sync(null, 'problems/index.json', 'utf8'));
+	
+	var server = express.createServer(
+		express.logger(),
+		express.cookieParser(),
+		express.session({key: "auth.sid", secret: 'badampam-pshh!h34uhif3'}),
+		express.bodyParser(),
+		express.static(__dirname + '/public')
+	);
+	
+	//Problem List (Guest)
+	server.get('/problems', function (req, res, next) {
+		req.ret = [];
+		for (var key in problems)
+			if (key != '__proto__')
+				req.ret.push({title: key});
 		next();
-	else if (lurl.pathname == "/login") {
-		db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)}).count(function (err, value) {
+	});
+	
+	//Problem Statement (Guest)
+	server.get('/problems/:p', function (req, res, next) {
+		req.ret = {};
+		var p = problems[req.params.p];
+		req.ret.description = md(fs.readFileSync('problems/' + p.folder + '/description.md', 'utf8'));
+		req.ret.points = p.points;
+		next();
+	});
+	
+	//Authentication
+	server.get('/*', function (req, res, next) {
+		var lurl = url.parse(req.url, true);
+		if (lurl.pathname == "/logout")
+		{
+			req.session.destroy();
+			res.send("You will be remembered.");
+		}
+		else if (lurl.pathname == "/login") {
+			var value = db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)}).count.sync(null);
 			if (value == 1)
 			{
 				req.session.auth = true;
+				req.session.teamname = decodeURIComponent(req.query.teamname);
+				setUpFileDump(decodeURIComponent(req.query.teamname));
 				res.send("A new beginning.");
 			}
 			else
 				res.send("You think you can trick me?<br>403! Joor-Zah-Frul !!!");
-		});
+		}
+		else if (req.session && req.session.auth == true)
+			next();
+		else if (req.ret)
+			res.send(JSON.stringify(req.ret));
+		else
+			res.send("Who d'ya think you are?<br>403! Joor-Zah-Frul !!!");
+	});
+	
+	function setUpFileDump(teamname) {
+		for (var problemTitle in problems)
+			if (problemTitle != '__proto__')
+				problems[problemTitle].editable.forEach(function (fileName) {
+					if (db.FileDump.find({team: teamname, problem: problemTitle, file: fileName}).count.sync(null) == 0)
+						db.FileDump.save.sync(null, {team: teamname, problem: problemTitle, file: fileName, data: fs.readFileSync('problems/' + problems[problemTitle].folder + '/editable/' + fileName)});
+				});
 	}
-	else
-		res.send("Who d'ya think you are?<br>403! Joor-Zah-Frul !!!");
-});
-
-//404
-server.get('/*', function (req, res) {
-	res.send('You hack me?<br>404! Fus-Ro-Dah !!!');
-});
-
-var port = process.env.PORT || 3000;
-server.listen(port, function() {
-	console.log("Listening on port " + port);
-});
+	
+	//Problem List (User)
+	server.get('/problems', function (req, res, next) {
+		res.send(JSON.stringify(req.ret));
+	});
+	
+	//Problem Statement (User)
+	server.get('/problems/:p', function (req, res, next) {
+		res.send(JSON.stringify(req.ret));
+	});
+	
+	//404
+	server.get('/*', function (req, res) {
+		res.send('You hack me?<br>404! Fus-Ro-Dah !!!');
+	});
+	
+	var port = process.env.PORT || 5000;
+	server.listen(port, function() {
+		console.log("Listening on port " + port);
+	});
+})

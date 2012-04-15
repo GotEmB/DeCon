@@ -6,7 +6,8 @@
 		"url": ">=0.4.9",
 		"mongojs": ">=0.3.2",
 		"MD5": ">=0.0.0",
-		"node-markdown": ">=0.1.0"
+		"node-markdown": ">=0.1.0",
+		"sync": ">=0.2.0"
 	},
 	"engines": {
 		"node": ">=0.6.0",
