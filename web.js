@@ -6,6 +6,7 @@ var fs = require('fs');
 var md = require('node-markdown').Markdown;
 var Sync = require('sync');
 
+var problems;
 
 //db.Teams.save({teamname: "Code Kangaroos", password: md5("Camelroos" + "hb7gyfw")});
 
@@ -45,7 +46,7 @@ server.get('/*', function (req, res, next) {
 			res.send("You will be remembered.");
 		}
 		else if (lurl.pathname == "/login") {
-			var value = db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)}).count.sync(null);
+			var value = (this.t1 = db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)})).count.sync(this.t1);
 			if (value == 1)
 			{
 				req.session.auth = true;
@@ -69,8 +70,8 @@ function setUpFileDump(teamname) {
 	for (var problemTitle in problems)
 		if (problemTitle != '__proto__')
 			problems[problemTitle].editable.forEach(function (fileName) {
-				if (db.FileDump.find({team: teamname, problem: problemTitle, file: fileName}).count.sync(null) == 0)
-					db.FileDump.save.sync(null, {team: teamname, problem: problemTitle, file: fileName, data: fs.readFileSync('problems/' + problems[problemTitle].folder + '/editable/' + fileName)});
+				if ((this.t1 = db.FileDump.find({team: teamname, problem: problemTitle, file: fileName})).count.sync(this.t1) == 0)
+					(this.t2 = db.FileDump).save.sync(this.t2, {team: teamname, problem: problemTitle, file: fileName, data: fs.readFileSync('problems/' + problems[problemTitle].folder + '/editable/' + fileName, 'utf8')});
 			});
 }
 
@@ -91,8 +92,7 @@ server.get('/*', function (req, res) {
 
 //Start...
 Sync(function () {
-	var problems = JSON.parse(fs.readFile.sync(null, 'problems/index.json', 'utf8'));
-	var ct = db.Teams.find({teamname: "teamdoesnotexist"}).count.sync(null);
+	problems = JSON.parse(fs.readFile.sync(null, 'problems/index.json', 'utf8'));
 	
 	var port = process.env.PORT || 5000;
 	server.listen(port, function() {
