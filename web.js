@@ -18,6 +18,13 @@ var server = express.createServer(
 	express.static(__dirname + '/public')
 );
 
+//New Request -> New Fiber
+server.get('/*', function(req, res, next) {
+	Sync(function () {
+		next();
+	})
+});
+
 //Problem List (Guest)
 server.get('/problems', function (req, res, next) {
 	req.ret = [];
@@ -38,32 +45,30 @@ server.get('/problems/:p', function (req, res, next) {
 
 //Authentication
 server.get('/*', function (req, res, next) {
-	Sync(function () {
-		var lurl = url.parse(req.url, true);
-		if (lurl.pathname == "/logout")
+	var lurl = url.parse(req.url, true);
+	if (lurl.pathname == "/logout")
+	{
+		req.session.destroy();
+		res.send("You will be remembered.");
+	}
+	else if (lurl.pathname == "/login") {
+		var value = (this.t1 = db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)})).count.sync(this.t1);
+		if (value == 1)
 		{
-			req.session.destroy();
-			res.send("You will be remembered.");
+			req.session.auth = true;
+			req.session.teamname = decodeURIComponent(req.query.teamname);
+			setUpFileDump(decodeURIComponent(req.query.teamname));
+			res.send("A new beginning.");
 		}
-		else if (lurl.pathname == "/login") {
-			var value = (this.t1 = db.Teams.find({teamname: decodeURIComponent(req.query.teamname), password: decodeURIComponent(req.query.password)})).count.sync(this.t1);
-			if (value == 1)
-			{
-				req.session.auth = true;
-				req.session.teamname = decodeURIComponent(req.query.teamname);
-				setUpFileDump(decodeURIComponent(req.query.teamname));
-				res.send("A new beginning.");
-			}
-			else
-				res.send("You think you can trick me?<br>403! Joor-Zah-Frul !!!");
-		}
-		else if (req.session && req.session.auth == true)
-			next();
-		else if (req.ret)
-			res.send(JSON.stringify(req.ret));
 		else
-			res.send("Who d'ya think you are?<br>403! Joor-Zah-Frul !!!");
-	})
+			res.send("You think you can trick me?<br>403! Joor-Zah-Frul !!!");
+	}
+	else if (req.session && req.session.auth == true)
+		next();
+	else if (req.ret)
+		res.send(JSON.stringify(req.ret));
+	else
+		res.send("Who d'ya think you are?<br>403! Joor-Zah-Frul !!!");
 });
 
 function setUpFileDump(teamname) {
