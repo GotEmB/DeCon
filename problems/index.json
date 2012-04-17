@@ -1,11 +1,12 @@
 [
 	{
 		"start": "2012-04-16T16:00:00.000Z",
-		"end": "2012-04-26T16:00:00.000Z",
+		"end": "2012-04-29T16:00:00.000Z",
 		"problems": {
 			"Hello World!": {
 				"folder": "helloworld",
 				"points": 1,
+				"sample": false,
 				"files": {
 					"source.cpp": "c++",
 					"stdout": "txt",

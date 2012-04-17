@@ -2,12 +2,12 @@ var express = require('express');
 var url = require('url');
 var db = require('mongojs').connect(process.env.MONGOLAB_URI, ['Teams', 'FileDump']);
 var md5 = require('MD5');
-var fs = require('fs');
+var fs = require('fs.extra');
 var md = require('node-markdown').Markdown;
 var Sync = require('sync');
 
 //Global Vars
-var problems;
+var problems, roundStart;
 
 //FluentQueryJS
 Object.prototype.toDictionary = function () {
@@ -49,6 +49,18 @@ Array.prototype.contains = function (item) {
 	return this.where(function (x) {return x == item;}) > 0;
 }
 
+Array.prototype.any = function (fun) {
+	return this.where(fun).length > 0;
+}
+
+Array.prototype.sum = function (fun) {
+	if (fun)
+		return this.where(fun).sum();
+	var ret = 0;
+	this.forEach(function (x) {ret += x;});
+	return ret;
+}
+
 //JSON.parseWithDate
 JSON.parseWithDate = function(json) {
 	var reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/;
@@ -70,6 +82,7 @@ JSON.parseWithDate = function(json) {
 
 //db.Teams.save({teamname: "Code Kangaroos", password: md5("Camelroos" + "hb7gyfw")});
 
+//Setup Server...
 var server = express.createServer(
 	express.logger(),
 	express.cookieParser(),
@@ -87,10 +100,7 @@ server.get('/*', function(req, res, next) {
 
 //Problem List (Guest)
 server.get('/problems', function (req, res, next) {
-	req.ret = [];
-	for (var key in problems)
-		if (key != '__proto__')
-			req.ret.push({title: key});
+	req.ret = problems.toDictionary().select(function (x) {return {title: x.key};});
 	next();
 });
 
@@ -101,6 +111,17 @@ server.get('/problems/:p', function (req, res, next) {
 	req.ret.description = md(fs.readFileSync('problems/' + p.folder + '/description.md', 'utf8'));
 	req.ret.points = p.points;
 	next();
+});
+
+//Score Board
+server.get('/scoreboard', function (req, res, next) {
+	req.ret = (this.t1 = db.Teams).find.sync(t1).select(function (x) {return {
+		team: x.teamname,
+		problemsdone: problems.toDictionary().select(function (y) {return {problem: y.key, done: x.problemsdone.toDictionary().any(function (z) {return z.key == y.key;})};}),
+		score: x.problemsdone.toDictionary().select(function (y) {return problems[y.key].points;}).sum(),
+		penalty: new Date(x.problemsdone.toDictionary().select(function (y) {return (y.value.getTime() - roundStart.getTime()) * (1.0 / problems[y.key].points);}).sum())
+	};});
+	res.send(JSON.stringify(req.ret));
 });
 
 //Authentication
@@ -143,7 +164,7 @@ function setUpFileDump(teamname) {
 //Problem List (User)
 server.get('/problems', function (req, res, next) {
 	var teaminfo = (this.t1 = db.Teams).find.sync(this.t1, {teamname: req.session.teamname}).first();
-	req.ret.forEach(function (x) {x.done = teaminfo.problemsdone.contains(x.title);});
+	req.ret.forEach(function (x) {x.done = teaminfo.problemsdone.toDictionary().any(function (y) {return y.key == x.title});});
 	res.send(JSON.stringify(req.ret));
 });
 
@@ -164,15 +185,37 @@ server.get('/problems/:p', function (req, res, next) {
 			language: problems[req.params.p].files[x.file]
 		});
 	});
-	req.ret.stock = [];
-	fs.readdir.sync(null, 'problems/' + problems[req.params.p].folder + '/test/before').forEach(function (x) {
-		req.ret.stock.push({
-			file: stdiop(x),
-			data: fs.readFile.sync(null, 'problems/' + problems[req.params.p].folder + '/test/before/' + x, 'utf8'),
-			language: problems[req.params.p].files[x]
+	if (problems[req.params.p].sample) {
+		req.ret.sample = [];
+		fs.readdir.sync(null, 'problems/' + problems[req.params.p].folder + '/sample/before').forEach(function (x) {
+			req.ret.sample.push({
+				file: stdiop(x),
+				data_before: fs.readFile.sync(null, 'problems/' + problems[req.params.p].folder + '/sample/before/' + x, 'utf8'),
+				language: problems[req.params.p].files[x]
+			});
 		});
-	});
+		fs.readdir.sync(null, 'problems/' + problems[req.params.p].folder + '/sample/after').forEach(function (x) {
+			if (req.ret.sample.any(function (y) {return y.file == x;}))
+				req.ret.sample.first(function (y) {return y.file == x;}).data_after = fs.readFile.sync(null, 'problems/' + problems[req.params.p].folder + '/sample/after/' + x, 'utf8');
+			else
+				req.ret.sample.push({
+					file: stdiop(x),
+					data_after: fs.readFile.sync(null, 'problems/' + problems[req.params.p].folder + '/sample/after/' + x, 'utf8'),
+					language: problems[req.params.p].files[x]
+				});
+		});
+	}
 	res.send(JSON.stringify(req.ret));
+});
+
+//Run
+server.get('/problems/:p/run/:dcase', function (req, res, next) {
+	var folder = '/sandbox/' + md5(req.session.teamname + req.params.p + req.params.dcase + (new Date()).getTime());
+	fs.mkdir.sync(null, folder, '0777');
+	fs.readdir.sync(null, 'problems/' + problems[req.params.p].folder + '/' + req.params.dcase + '/before').forEach(function (x) {
+		fs.copy.sync(null, 'problems/' + problems[req.params.p].folder + '/' + req.params.dcase + '/before/' + x, folder + '/' + x);
+	});
+	//More Stuff...
 });
 
 //404
@@ -183,6 +226,7 @@ server.get('/*', function (req, res) {
 //Start the server...
 Sync(function () {
 	problems = JSON.parseWithDate(fs.readFile.sync(null, 'problems/index.json', 'utf8')).first(function (x) {return x.start <= new Date() && x.end >= new Date();}).problems;
+	roundStart = JSON.parseWithDate(fs.readFile.sync(null, 'problems/index.json', 'utf8')).first(function (x) {return x.start <= new Date() && x.end >= new Date();}).start;
 	//ToDo: Start timer to end of round here.
 	
 	var port = process.env.PORT || 5000;
