@@ -69,8 +69,10 @@ server = express.createServer(
 	express.session
 		key: "auth.sid"
 		secret: "badampam-pshh!h34uhif3",
-	express.bodyParser(),
-	express.static "#{__dirname}/public")
+	express.bodyParser())
+
+server.use express.static "#{__dirname}/public", (err) -> console.log "Static: #{err}"
+server.use server.router
 
 # New Request -> New Fiber
 server.get "/*", (req, res, next) -> Sync ->
