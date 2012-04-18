@@ -48,6 +48,22 @@ Array::sum = (fun) ->
 	@forEach (x) -> ret += x
 	ret
 
+Array::except = (arr) ->
+	ret = [];
+	@forEach (x) -> ret.push x unless arr.contains x
+	ret
+
+Array::flatten = (arr) ->
+	ret = [];
+	@foreach (x) -> x.forEach (y) -> ret.push y
+	ret
+
+Array::groupBy = (fun) ->
+	g1 = this.select (x) ->
+		key: fun x
+		value: x
+	#ToDo...
+
 # JSON extension
 JSON.parseWithDate = (json) ->
 	reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/
@@ -99,13 +115,14 @@ server.get "/problems/:p", (req, res, next) ->
 
 # Scoreboard
 server.get "/scoreboard", (req, res, next) ->
-	req.ret = (@t1 = db.Teams).find.sync(t1).select (x) ->
+	tret = (@t1 = db.Teams).find.sync(t1).select (x) ->
 		team: x.teamname
 		problemsdone: problems.toDictionary().select (y) ->
 			problem: y.key
 			done: x.problemsdone.toDictionary().any (z) -> z.key is y.key
 		score: x.problemsdone.toDictionary().select((y) -> problems[y.key].points).sum()
 		penalty: new Date x.problemsdone.toDictionary().select((y) -> (y.value.getTime() - roundStart.getTime()) * (1.0 / problems[y.key].points)).sum()
+		# ToDo: Ranking...
 	res.send JSON.stringify req.ret
 
 # Authentication
