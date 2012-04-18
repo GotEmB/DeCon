@@ -71,15 +71,18 @@ server = express.createServer(
 		secret: "badampam-pshh!h34uhif3",
 	express.bodyParser())
 
-# New Request -> New Fiber
-server.use (req, res, next) -> Sync ->
+# Entry Point
+server.use (req, res, next) ->
 	console.log "Request URL: #{req.url}"
 	req.url = "/index.html" if req.url is "/"
 	next()
 
-# Main Routes
+# Static Server priority
 server.use express.static "#{__dirname}/public", (err) -> console.log "Static: #{err}"
 server.use server.router
+
+# New Request -> New Fiber
+server.get "/*", (req, res, next) -> Sync -> next()
 
 # Problems (Guest)
 server.get "/problems", (req, res, next) ->
@@ -185,10 +188,15 @@ server.get "/problems/:p", (req, res, next) ->
 
 # Run
 server.get "/problems/:p/run/:dcase", (req, res, next) ->
-	folder = "/sandbox/" + md5 req.session.teamname + req.params.p + req.params.dcase + (new Date()).getTime()
+	folder = "sandbox/" + md5 req.session.teamname + req.params.p + req.params.dcase + (new Date()).getTime()
 	fs.mkdir.sync null, folder, "0777"
-	fs.readdir.sync(null, "problems/" + problems[req.params.p].folder + "/" + req.params.dcase + "/before").forEach (x) ->
-		fs.copy.sync null, "problems/" + problems[req.params.p].folder + "/" + req.params.dcase + "/before/" + x, folder + "/" + x
+	fs.readdir.sync(null, "problems/#{problems[req.params.p].folder}/#{req.params.dcase}/before").forEach (x) ->
+		fs.copy.sync null, "problems/#{problems[req.params.p].folder}/#{req.params.dcase}/before/#{x}", "#{folder}/#{x}"
+	((@t1 = db.FileDump).find.sync @t1,
+		team: req.session.teamname
+		problem: req.params.p
+	).forEach (x) -> fs.writeFile.sync null, "#{folder}/#{x.file}", x.data
+	res.send "Sandbox @ #{folder}"
 
 # 404
 server.get "/*", (req, res) -> res.send "You hack me bro?<br>404! Fus-Ro-Dah !!!"
