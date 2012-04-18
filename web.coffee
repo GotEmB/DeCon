@@ -193,4 +193,4 @@ Sync ->
 	roundStart = JSON.parseWithDate(fs.readFile.sync(null, "problems/index.json", "utf8")).first((x) -> x.start <= new Date() and x.end >= new Date()).start
 	port = process.env.PORT or 5000
 	server.listen port, -> console.log "Listening on port " + port
-	console.log "Working directory: #{__dirname}"
+	console.log "Files & directories in #{__dirname}:" + fs.readdir.sync(null, __dirname)
