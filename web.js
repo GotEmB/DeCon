@@ -110,10 +110,10 @@
     });
   };
 
-  server = express.createServer(express.logger(), express.cookieParser(), express.session({
+  server = express.createServer(express.static(__dirname + "/public"), express.logger(), express.cookieParser(), express.session({
     key: "auth.sid",
     secret: "badampam-pshh!h34uhif3"
-  }), express.bodyParser(), express.static("" + __dirname + "/public"));
+  }), express.bodyParser());
 
   server.get("/*", function(req, res, next) {
     return Sync(function() {
