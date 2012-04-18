@@ -73,7 +73,9 @@ server = express.createServer(
 	express.static "#{__dirname}/public")
 
 # New Request -> New Fiber
-server.get "/*", (req, res, next) -> Sync -> next()
+server.get "/*", (req, res, next) -> Sync ->
+	console.log  "Request Path: #{req.url}"
+	next()
 
 # Problems (Guest)
 server.get "/problems", (req, res, next) ->
