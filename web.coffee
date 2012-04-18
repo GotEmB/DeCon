@@ -71,13 +71,15 @@ server = express.createServer(
 		secret: "badampam-pshh!h34uhif3",
 	express.bodyParser())
 
+# New Request -> New Fiber
+server.use (req, res, next) -> Sync ->
+	console.log "Request URL: #{req.url}"
+	req.url = "/index.html" if req.url is "/"
+	next()
+
+# Main Routes
 server.use express.static "#{__dirname}/public", (err) -> console.log "Static: #{err}"
 server.use server.router
-
-# New Request -> New Fiber
-server.get "/*", (req, res, next) -> Sync ->
-	console.log  "Request Path: #{req.url}"
-	next()
 
 # Problems (Guest)
 server.get "/problems", (req, res, next) ->
