@@ -12,8 +12,9 @@ $ ->
 				$.get "login",
 					teamname: $("#login_teamname").val()
 					password: Crypto.MD5 $("#login_password").val(),
-					(data) ->
+					(x) ->
 						$("#ranking-box div:first-child").text $("#login_teamname").val()
+						$("#ranking-box div:last-child").text "--"
 			Cancel: ->
 				$("#login-form").dialog "close"
 

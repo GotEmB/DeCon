@@ -5,6 +5,7 @@ md5 = require("MD5")
 fs = require("fs.extra")
 md = require("node-markdown").Markdown
 Sync = require("sync")
+expressCoffee = require("express-coffee")
 
 # Global Vars
 problems = undefined
@@ -31,14 +32,22 @@ Array::where = (fun) ->
 	ret
 
 Array::first = (fun) ->
-	return this[0] unless fun
-	ret = @where(fun)
-	unless ret.length is 0
-		ret[0]
-	else
+	if @length is 0
 		null
+	else if fun
+		@where(fun).first()
+	else
+		@[0]
 
-Array::contains = (item) -> @where((x) -> x is item) > 0
+Array::last = (fun) ->
+	if @length is 0
+		null
+	else if fun
+		@where(fun).last()
+	else
+		@[@length - 1]
+
+Array::contains = (item) -> @where((x) -> x is item).length > 0
 
 Array::any = (fun) -> @where(fun).length > 0
 
@@ -53,16 +62,33 @@ Array::except = (arr) ->
 	@forEach (x) -> ret.push x unless arr.contains x
 	ret
 
-Array::flatten = (arr) ->
+Array::flatten = ->
 	ret = [];
-	@foreach (x) -> x.forEach (y) -> ret.push y
+	@forEach (x) -> x.forEach (y) -> ret.push y
 	ret
 
+Array::selectMany = (fun) ->
+	@select(fun).flatten()
+
 Array::groupBy = (fun) ->
-	g1 = this.select (x) ->
+	g1 = @select (x) ->
 		key: fun x
 		value: x
-	#ToDo...
+	while g1.length isnt 0
+		g2 = g1.where (x) -> x.key is g1.first().key
+		g1 = g1.except g1.where (x) -> x.key is g1.first().key
+		key: g2.first().key
+		values: g2.select (x) -> x.value
+
+Array::orderBy = (fun) ->
+	ret = @select (x) -> x
+	ret.sort (a, b) -> fun(a) - fun(b)
+	ret
+
+Array::orderByDesc = (fun) ->
+	ret = @select (x) -> x
+	ret.sort (a, b) -> fun(b) - fun(a)
+	ret
 
 # JSON extension
 JSON.parseWithDate = (json) ->
@@ -80,7 +106,6 @@ JSON.parseWithDate = (json) ->
 
 # Create and Setup Server
 server = express.createServer(
-	express.logger(),
 	express.cookieParser(),
 	express.session
 		key: "auth.sid"
@@ -94,6 +119,7 @@ server.use (req, res, next) ->
 	next()
 
 # Static Server priority
+server.use expressCoffee path: "#{__dirname}/public"
 server.use express.static "#{__dirname}/public", (err) -> console.log "Static: #{err}"
 server.use server.router
 
@@ -123,6 +149,8 @@ server.get "/scoreboard", (req, res, next) ->
 		score: x.problemsdone.toDictionary().select((y) -> problems[y.key].points).sum()
 		penalty: new Date x.problemsdone.toDictionary().select((y) -> (y.value.getTime() - roundStart.getTime()) * (1.0 / problems[y.key].points)).sum()
 		# ToDo: Ranking...
+	req.ret = tret.where((x) -> x.score isnt 0).groupBy((x) -> x.score).orderByDesc((x) -> x.key).selectMany((x) -> x.values.orderBy((y) -> y.penalty))
+	team.rank = i + 1 for team, i in req.ret
 	res.send JSON.stringify req.ret
 
 # Authentication
