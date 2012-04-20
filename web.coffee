@@ -16,7 +16,7 @@ request = require("request")
 problems = undefined
 roundStart = undefined
 port = undefined
-useCluster = false
+useCluster = true
 
 # Fluent Stuff
 Object::toDictionary = ->
@@ -197,7 +197,7 @@ server.get "/*", (req, res, next) ->
 			req.session.teamname = decodeURIComponent req.query.teamname
 			setUpFileDump decodeURIComponent req.query.teamname
 			req.ret =
-				rank: JSON.parseWithDate(request.sync(null, "http://127.0.0.1:#{port}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
+				rank: JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
 			res.send JSON.stringify req.ret
 		else
 			res.send "You trick me bro?<br>403! Joor-Zah-Frul !!!"
