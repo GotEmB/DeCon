@@ -1,3 +1,4 @@
+# Load Modules
 express = require("express")
 url = require("url")
 db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump" ])
@@ -6,10 +7,14 @@ fs = require("fs.extra")
 md = require("node-markdown").Markdown
 Sync = require("sync")
 expressCoffee = require("express-coffee")
+cron = require("cron")
+http = require("http")
+threads = require("threads_a_gogo")
 
 # Global Vars
 problems = undefined
 roundStart = undefined
+port = undefined
 
 # Fluent Stuff
 Object::toDictionary = ->
@@ -182,7 +187,13 @@ server.get "/*", (req, res, next) ->
 			req.session.auth = true
 			req.session.teamname = decodeURIComponent req.query.teamname
 			setUpFileDump decodeURIComponent req.query.teamname
-			res.send "A new beginning."
+			req.ret =
+				rank: http.request.sync(null,
+						host: "localhost"
+						port: port
+						path: "/scoreboard"
+					).first((x) -> x.team is req.session.teamname).select (x) -> x.rank
+			res.send JSON.stringify req.ret
 		else
 			res.send "You trick me bro?<br>403! Joor-Zah-Frul !!!"
 	else if req.session and req.session.auth is true
@@ -248,7 +259,12 @@ server.get "/*", (req, res) -> res.send "You hack me bro?<br>404! Fus-Ro-Dah !!!
 
 # Start Server...
 Sync ->
-	problems = JSON.parseWithDate(fs.readFile.sync(null, "problems/index.json", "utf8")).first((x) -> x.start <= new Date() and x.end >= new Date()).problems
-	roundStart = JSON.parseWithDate(fs.readFile.sync(null, "problems/index.json", "utf8")).first((x) -> x.start <= new Date() and x.end >= new Date()).start
+	newRound = ->
+		pindex = JSON.parseWithDate(fs.readFile.sync(null, "problems/index.json", "utf8")).first((x) -> x.start <= new Date() and x.end >= new Date())
+		problems = pindex.problems
+		roundStart = pindex.start
+		nextRound = new cron.CronJob pindex.end, newRound
+		nextRound.start()
+	newRound()
 	port = process.env.PORT or 5000
 	server.listen port, -> console.log "Listening on port " + port
