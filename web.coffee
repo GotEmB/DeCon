@@ -16,6 +16,7 @@ request = require("request")
 problems = undefined
 roundStart = undefined
 port = undefined
+useCluster = false
 
 # Fluent Stuff
 Object::toDictionary = ->
@@ -111,7 +112,7 @@ JSON.parseWithDate = (json) ->
 		value
 
 # Setup workers
-if cluster.isMaster
+if cluster.isMaster and useCluster
 	console.log "Worker started with pid #{cluster.fork().pid}" for [1..4]
 	cluster.on "death", (x) ->
 		console.log "Worker #{x.pid} died"
@@ -196,7 +197,7 @@ server.get "/*", (req, res, next) ->
 			req.session.teamname = decodeURIComponent req.query.teamname
 			setUpFileDump decodeURIComponent req.query.teamname
 			req.ret =
-				rank: JSON.parseWithDate(request.sync(null, "http://localhost:#{port}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
+				rank: JSON.parseWithDate(request.sync(null, "http://127.0.0.1:#{port}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
 			res.send JSON.stringify req.ret
 		else
 			res.send "You trick me bro?<br>403! Joor-Zah-Frul !!!"
