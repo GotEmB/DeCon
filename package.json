@@ -11,8 +11,8 @@
 		"fs.extra": ">=1.0.1",
 		"coffee-script": ">=1.3.1",
 		"express-coffee": "https://github.com/GotEmB/express-coffee/tarball/master",
-		"cron" :">=0.2.0",
-		"threads_a_gogo": ">=0.1.4"
+		"cron": ">=0.2.0",
+		"request": ">=2.9.202"
 	},
 	"engines": {
 		"node": ">=0.6.0",

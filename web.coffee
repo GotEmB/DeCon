@@ -9,7 +9,8 @@ Sync = require("sync")
 expressCoffee = require("express-coffee")
 cron = require("cron")
 http = require("http")
-threads = require("threads_a_gogo")
+cluster = require("cluster")
+request = require("request")
 
 # Global Vars
 problems = undefined
@@ -109,6 +110,13 @@ JSON.parseWithDate = (json) ->
 				return new Date(+b[0])
 		value
 
+# Setup workers
+if cluster.isMaster
+	console.log "Worker started with pid #{cluster.fork().pid}" for [1..4]
+	cluster.on "death", (x) ->
+		console.log "Worker #{x.pid} died"
+	return
+
 # Create and Setup Server
 server = express.createServer(
 	express.cookieParser(),
@@ -119,7 +127,7 @@ server = express.createServer(
 
 # Entry Point
 server.use (req, res, next) ->
-	console.log "Request URL: #{req.url}"
+	console.log "Worker #{process.env.NODE_WORKER_ID}: Request URL: #{req.url}"
 	req.url = "/index.html" if req.url is "/"
 	next()
 
@@ -188,11 +196,7 @@ server.get "/*", (req, res, next) ->
 			req.session.teamname = decodeURIComponent req.query.teamname
 			setUpFileDump decodeURIComponent req.query.teamname
 			req.ret =
-				rank: http.request.sync(null,
-						host: "localhost"
-						port: port
-						path: "/scoreboard"
-					).first((x) -> x.team is req.session.teamname).select (x) -> x.rank
+				rank: JSON.parseWithDate(request.sync(null, "http://localhost:#{port}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
 			res.send JSON.stringify req.ret
 		else
 			res.send "You trick me bro?<br>403! Joor-Zah-Frul !!!"
@@ -267,4 +271,4 @@ Sync ->
 		nextRound.start()
 	newRound()
 	port = process.env.PORT or 5000
-	server.listen port, -> console.log "Listening on port " + port
+	server.listen port, -> console.log "Worker #{process.env.NODE_WORKER_ID}: Listening on port " + port
