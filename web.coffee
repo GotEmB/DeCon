@@ -272,4 +272,4 @@ Sync ->
 		nextRound.start()
 	newRound()
 	port = process.env.PORT or 5000
-	server.listen port, -> console.log "Worker #{process.env.NODE_WORKER_ID}: Listening on port " + port
+	server.listen port, -> console.log "Worker #{process.env.NODE_WORKER_ID}: Listening on port #{port}"
