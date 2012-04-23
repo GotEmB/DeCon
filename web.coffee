@@ -11,12 +11,13 @@ cron = require("cron")
 http = require("http")
 cluster = require("cluster")
 request = require("request")
+mongoStore = require("connect-mongo")(express);
 
 # Global Vars
 problems = undefined
 roundStart = undefined
 port = undefined
-useCluster = true
+useCluster = false
 
 # Fluent Stuff
 Object::toDictionary = ->
@@ -123,7 +124,8 @@ server = express.createServer(
 	express.cookieParser(),
 	express.session
 		key: "auth.sid"
-		secret: "badampam-pshh!h34uhif3",
+		secret: "badampam-pshh!h34uhif3"
+		store: new mongoStore "#{process.env.MONGOLAB_URI}"
 	express.bodyParser())
 
 # Entry Point
@@ -188,19 +190,21 @@ server.get "/*", (req, res, next) ->
 		req.session.destroy()
 		res.send "You will be remembered."
 	else if lurl.pathname is "/login"
+		console.log req.query
 		value = (@t1 = db.Teams.find
-			teamname: decodeURIComponent req.query.teamname
-			password: decodeURIComponent req.query.password
+			teamname: req.query.teamname
+			password: req.query.password
 		).count.sync @t1
 		if value is 1
 			req.session.auth = true
-			req.session.teamname = decodeURIComponent req.query.teamname
-			setUpFileDump decodeURIComponent req.query.teamname
+			req.session.teamname = req.query.teamname
+			setUpFileDump req.query.teamname
 			req.ret =
+				success: true
 				rank: JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
 			res.send JSON.stringify req.ret
 		else
-			res.send "You trick me bro?<br>403! Joor-Zah-Frul !!!"
+			res.send JSON.stringify success: false
 	else if req.session and req.session.auth is true
 		next()
 	else if req.ret

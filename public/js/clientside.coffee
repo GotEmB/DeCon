@@ -13,8 +13,13 @@ $ ->
 					teamname: $("#login_teamname").val()
 					password: Crypto.MD5 $("#login_password").val(),
 					(x) ->
-						$("#ranking-box div:first-child").text $("#login_teamname").val()
-						$("#ranking-box div:last-child").text "--"
+						d = JSON.parse x
+						if d.success
+							$("#ranking-box div:first-child").text $("#login_teamname").val()
+							$("#ranking-box div:last-child").text "\##{d.rank}"
+							$("#login-form").dialog "close"
+						else
+							$.jAlert "Invalid Teamname / Password!", "error"
 			Cancel: ->
 				$("#login-form").dialog "close"
 
