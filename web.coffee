@@ -4,7 +4,7 @@ url = require("url")
 db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump" ])
 md5 = require("MD5")
 fs = require("fs.extra")
-md = require("node-markdown").Markdown
+md = require("github-flavored-markdown")
 Sync = require("sync")
 expressCoffee = require("express-coffee")
 cron = require("cron")
@@ -142,6 +142,17 @@ server.use server.router
 # New Request -> New Fiber
 server.get "/*", (req, res, next) -> Sync -> next()
 
+# Get Session State
+server.get "/state", (req, res, next) ->
+	if req.session.auth
+		score = JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname)
+		res.send
+			loggedin: true
+			team: req.session.teamname
+			rank: if score then score.rank else "Unranked"
+	else
+		res.send loggedin: false
+
 # Problems (Guest)
 server.get "/problems", (req, res, next) ->
 	req.ret = problems.toDictionary().select (x) -> title: x.key
@@ -151,7 +162,7 @@ server.get "/problems", (req, res, next) ->
 server.get "/problems/:p", (req, res, next) ->
 	req.ret = {}
 	p = problems[req.params.p]
-	req.ret.description = md fs.readFileSync "problems/#{p.folder}/description.md", "utf8"
+	req.ret.description = md.parse fs.readFileSync "problems/#{p.folder}/description.md", "utf8"
 	req.ret.points = p.points
 	next()
 
@@ -164,10 +175,9 @@ server.get "/scoreboard", (req, res, next) ->
 			done: x.problemsdone.toDictionary().any (z) -> z.key is y.key
 		score: x.problemsdone.toDictionary().select((y) -> problems[y.key].points).sum()
 		penalty: new Date x.problemsdone.toDictionary().select((y) -> (y.value.getTime() - roundStart.getTime()) * (1.0 / problems[y.key].points)).sum()
-		# ToDo: Ranking...
 	req.ret = tret.where((x) -> x.score isnt 0).groupBy((x) -> x.score).orderByDesc((x) -> x.key).selectMany((x) -> x.values.orderBy((y) -> y.penalty))
 	team.rank = i + 1 for team, i in req.ret
-	res.send JSON.stringify req.ret
+	res.send req.ret
 
 # Authentication
 server.get "/*", (req, res, next) ->
@@ -187,10 +197,16 @@ server.get "/*", (req, res, next) ->
 							data: fs.readFileSync "problems/#{problems[problemTitle].folder}/editable/#{fileName}", "utf8"
 	lurl = url.parse(req.url, true)
 	if lurl.pathname is "/logout"
-		req.session.destroy()
-		res.send "You will be remembered."
+		if req.session.auth
+			req.session.destroy()
+			res.send JSON.stringify
+				success: true
+				message: "You will be remembered."
+		else
+			res.send JSON.stringify
+				success: false
+				message: "Who ARE you?"
 	else if lurl.pathname is "/login"
-		console.log req.query
 		value = (@t1 = db.Teams.find
 			teamname: req.query.teamname
 			password: req.query.password
@@ -199,16 +215,17 @@ server.get "/*", (req, res, next) ->
 			req.session.auth = true
 			req.session.teamname = req.query.teamname
 			setUpFileDump req.query.teamname
+			score = JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname)
 			req.ret =
 				success: true
-				rank: JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname).rank
-			res.send JSON.stringify req.ret
+				rank: if score then score.rank else "Unranked"
+			res.send req.ret
 		else
-			res.send JSON.stringify success: false
+			res.send success: false
 	else if req.session and req.session.auth is true
 		next()
 	else if req.ret
-		res.send JSON.stringify req.ret
+		res.send req.ret
 	else
 		res.send "Who d'ya think you are?<br>403! Joor-Zah-Frul !!!"
 
@@ -217,7 +234,7 @@ server.get "/problems", (req, res, next) ->
 	teaminfo = (@t1 = db.Teams).find.sync(@t1, teamname: req.session.teamname).first()
 	req.ret.forEach (x) ->
 		x.done = teaminfo.problemsdone.toDictionary().any (y) -> y.key is x.title
-	res.send JSON.stringify req.ret
+	res.send req.ret
 
 # Problem Statement (User)
 server.get "/problems/:p", (req, res, next) ->
@@ -249,7 +266,7 @@ server.get "/problems/:p", (req, res, next) ->
 					file: stdiop x
 					data_after: fs.readFile.sync null, "problems/#{problems[req.params.p].folder}/sample/after/#{x}", "utf8"
 					language: problems[req.params.p].files[x]
-	res.send JSON.stringify req.ret
+	res.send req.ret
 
 # Run
 server.get "/problems/:p/run/:dcase", (req, res, next) ->

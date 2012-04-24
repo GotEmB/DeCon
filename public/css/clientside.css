@@ -13,6 +13,30 @@ body
 	-moz-user-select: none;
 }
 
+code
+{
+	background-color: rgb(247, 247, 247);
+	border: 1px solid silver;
+	border-radius: 2px;
+	padding: 1px;
+}
+
+pre
+{
+	background-color: rgb(247, 247, 247);
+	border: 1px solid silver;
+	border-radius: 2px;
+	padding: 5px;
+}
+
+	pre code
+	{
+		background-color: none;
+		border: none;
+		border-radius: none;
+		padding: none;
+	}
+
 #header
 {
 	display: box;
@@ -123,10 +147,15 @@ div.login-row input
 				content: '.';
 			}
 			
-			#problems-contents div span:last-child
+		#problems-contents div span:nth-child(2)
 		{	
 			position: absolute;
 			left: 35px;
+		}
+		
+		#problems-contents div span:nth-child(3)
+		{
+			float: right;
 		}
 		
 	#problems-contents div:first-child
@@ -164,6 +193,18 @@ div.login-row input
 	margin: -1px;
 }
 
+	#problem-header span:first-child
+	{
+		text-align: center;
+		width: auto;
+	}
+	
+	#problem-header span:nth-child(2)
+	{
+		position: absolute;
+		right: 15px;
+	}
+
 #scoreboard-container, #problem-container
 {
 	position: absolute;
@@ -171,12 +212,19 @@ div.login-row input
 	top: 41px;
 	bottom: 0;
 	overflow-x: inherit;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 
 #scoreboard-container
 {
 	margin-bottom: -1px;
+}
+
+#problem-container div.desc
+{
+	padding: 0 20px;
+	font-size: 80%;
+	line-height: 120%;
 }
 
 #scoreboard-data
