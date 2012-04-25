@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>web.coffee</string>
+	<string>public/js/clientside.coffee</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -18,9 +18,11 @@
 			<key>filename</key>
 			<string>package.json</string>
 			<key>lastUsed</key>
-			<date>2012-04-18T10:35:55Z</date>
+			<date>2012-04-24T16:37:05Z</date>
 		</dict>
 		<dict>
+			<key>expanded</key>
+			<true/>
 			<key>name</key>
 			<string>problems</string>
 			<key>regexFolderFilter</key>
@@ -31,6 +33,8 @@
 		<dict>
 			<key>filename</key>
 			<string>Procfile</string>
+			<key>lastUsed</key>
+			<date>2012-04-24T12:53:26Z</date>
 		</dict>
 		<dict>
 			<key>expanded</key>
@@ -54,57 +58,63 @@
 			<key>filename</key>
 			<string>web.coffee</string>
 			<key>lastUsed</key>
-			<date>2012-04-18T10:54:18Z</date>
-			<key>selected</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>web.js</string>
-			<key>lastUsed</key>
-			<date>2012-04-18T10:54:18Z</date>
+			<date>2012-04-25T09:57:50Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
 	<integer>200</integer>
 	<key>metaData</key>
 	<dict>
-		<key>package.json</key>
+		<key>public/css/clientside.css</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>1</integer>
+				<integer>2</integer>
 				<key>line</key>
-				<integer>16</integer>
+				<integer>258</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>240</integer>
+		</dict>
+		<key>public/index.html</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>121</integer>
+				<key>line</key>
+				<integer>6</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
+		</dict>
+		<key>public/js/clientside.coffee</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>168</integer>
+				<key>line</key>
+				<integer>165</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>122</integer>
 		</dict>
 		<key>web.coffee</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>11</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>19</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>15</integer>
-		</dict>
-		<key>web.js</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>37</integer>
-				<key>line</key>
-				<integer>12</integer>
+				<integer>99</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -114,13 +124,14 @@
 	</dict>
 	<key>openDocuments</key>
 	<array>
+		<string>public/js/clientside.coffee</string>
+		<string>public/index.html</string>
+		<string>public/css/clientside.css</string>
 		<string>web.coffee</string>
-		<string>package.json</string>
-		<string>web.js</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{437, 209}, {960, 489}}</string>
+	<string>{{363, 107}, {1152, 922}}</string>
 </dict>
 </plist>

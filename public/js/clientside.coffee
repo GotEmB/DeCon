@@ -68,6 +68,21 @@ Array::orderByDesc = (fun) ->
 	ret.sort (a, b) -> fun(b) - fun(a)
 	ret
 
+# JSON extension
+JSON.parseWithDate = (json) ->
+	reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/
+	reMsAjax = /^\/Date\((d|-|.*)\)\/$/
+	JSON.parse json, (key, value) ->
+		if typeof value is "string"
+			a = reISO.exec(value)
+			return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4], +a[5], +a[6])) if a
+			a = reMsAjax.exec(value)
+			if a
+				b = a[1].split(/[-,.]/)
+				return new Date(+b[0])
+		value
+
+# Entry Point
 $ ->
 	$("#login-form").dialog
 		autoOpen: false
@@ -121,7 +136,7 @@ fLogout = -> $.get "logout", (d) ->
 fProblems = -> $.get "problems", (d) ->
 	d = d.sort()
 	$("#problems-contents").html ""
-	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{"<span>&#10004;</span>" if d[i].done}" for i in [0...d.length]
+	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{if d[i].done then "<span>&#10004;</span>" else ""}" for i in [0...d.length]
 	$("#problems-contents div").addClass "ui-button ui-widget ui-widget-content ui-state-normal ui-button-text-only"
 	$("#problems-contents div").click -> fProblem $(this).children("span:nth-child(2)").text()
 	$("#problems-contents div").hover (-> $(this).addClass "ui-state-hover"), -> $(this).removeClass "ui-state-hover"
@@ -145,8 +160,11 @@ fScoreboard = -> $.get "scoreboard", (d) ->
 	$("#scoreboard-data tbody").html ""
 	d.forEach (t) ->
 		$("#scoreboard-data tbody").append "<tr></tr>"
+		t.penalty = JSON.parseWithDate "\"#{t.penalty}\""
+		t.penalty = "#{t.penalty.getHours()}:#{t.penalty.getMinutes()}:#{t.penalty.getSeconds()}"
 		$("#scoreboard-data tbody tr:last-child").append "<td>#{h}</td>" for h in [t.rank, t.team, t.score, t.penalty]
-		$("#scoreboard-data tbody tr:last-child").append "<td>#{if t.problemsdone.any((x) -> x.problem is h and x.done) then "$#10004;" else ""}</td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)	
-	qs = $("#problems-contents div span:nth-child(2)")
+		$("#scoreboard-data tbody tr:last-child").append "<td#{if t.problemsdone.any((x) -> x.problem is h.textContent and x.done) then "" else " style=\"color: transparent\""}>&#10004;</td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)
+	$("#scoreboard-data tr th").addClass "ui-widget ui-widget-header"
+	$("#scoreboard-data tr td").addClass "ui-widget ui-widget-content"
 	$("#problem-box").hide()
 	$("#scoreboard-box").show()
