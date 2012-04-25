@@ -68,6 +68,10 @@ Array::orderByDesc = (fun) ->
 	ret.sort (a, b) -> fun(b) - fun(a)
 	ret
 
+# Number Formatter
+pad2 = (number) ->
+     (if number < 10 then '0' else '') + number
+
 # JSON extension
 JSON.parseWithDate = (json) ->
 	reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/
@@ -111,10 +115,23 @@ $ ->
 
 fState = -> $.get "state", (d) ->
 	if d.loggedin
-		$("#ranking-box div:first-child").text d.teamname
+		$("#ranking-box div:first-child").text d.team
 		$("#ranking-box div:last-child").text if d.rank is "Unranked" then "Unranked" else "##{d.rank}"
 		$("#login-button span.ui-button-text").text "Logout"
+	else	
+		$("#ranking-box div:first-child").html "<center>Scoreboard</center>"
+		$("#login-button span.ui-button-text").text "Login"
+	$("#timeleft-box div:first-child").text "Time Left"
+	fTimeleft JSON.parseWithDate "\"#{d.roundends}\""
 	fProblems()
+
+fTimeleft = (roundEnds) ->
+	d = new Date roundEnds - new Date()
+	if d > 0
+		$("#timeleft-box div:last-child").text "#{pad2 d.getHours()}:#{pad2 d.getMinutes()}:#{pad2 d.getSeconds()}"
+		setTimeout (-> fTimeleft roundEnds), 1000
+	else
+		$("#timeleft-box div:last-child").text "00:00:00"
 
 fLogin = (auth) -> $.get "login", auth, (d) ->
 	if d.success
@@ -127,7 +144,7 @@ fLogin = (auth) -> $.get "login", auth, (d) ->
 		$.jAlert "Invalid Teamname / Password!", "error"
 
 fLogout = -> $.get "logout", (d) ->
-	$("#ranking-box div:first-child").text "Scoreboard"
+	$("#ranking-box div:first-child").html "<center>Scoreboard</center>"
 	$("#ranking-box div:last-child").text ""
 	$("#login-button span.ui-button-text").text "Login"
 	unless d.success
@@ -161,7 +178,7 @@ fScoreboard = -> $.get "scoreboard", (d) ->
 	d.forEach (t) ->
 		$("#scoreboard-data tbody").append "<tr></tr>"
 		t.penalty = JSON.parseWithDate "\"#{t.penalty}\""
-		t.penalty = "#{t.penalty.getHours()}:#{t.penalty.getMinutes()}:#{t.penalty.getSeconds()}"
+		t.penalty = "#{pad2 t.penalty.getHours()}:#{pad2 t.penalty.getMinutes()}:#{pad2 t.penalty.getSeconds()}"
 		$("#scoreboard-data tbody tr:last-child").append "<td>#{h}</td>" for h in [t.rank, t.team, t.score, t.penalty]
 		$("#scoreboard-data tbody tr:last-child").append "<td#{if t.problemsdone.any((x) -> x.problem is h.textContent and x.done) then "" else " style=\"color: transparent\""}>&#10004;</td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)
 	$("#scoreboard-data tr th").addClass "ui-widget ui-widget-header"
