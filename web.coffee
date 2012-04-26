@@ -140,7 +140,7 @@ Sync ->
 
 	# Static Server priority
 	server.use expressCoffee path: "#{__dirname}/public"
-	server.use express.static "#{__dirname}/public", (err) -> console.log "Static: #{err}"
+	server.use express.static "#{__dirname}/public", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	server.use server.router
 
 	# New Request -> New Fiber
@@ -223,7 +223,7 @@ Sync ->
 				req.session.teamname = req.query.teamname
 				setUpFileDump req.query.teamname
 				score = JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname)
-				req.ret =
+				req.ret = 
 					success: true
 					rank: if score then score.rank else "Unranked"
 				res.send req.ret
@@ -248,7 +248,10 @@ Sync ->
 		stdiop = (file) ->
 			if file is "stdout"
 				"Standard Output"
-			else "Standard Input" if file is "stdin"
+			else if file is "stdin"
+				"Standard Input"
+			else
+				file
 		editables = (@t1 = db.FileDump).find.sync @t1,
 			team: req.session.teamname
 			problem: req.params.p
@@ -256,7 +259,8 @@ Sync ->
 		editables.forEach (x) ->
 			req.ret.editables.push
 				file: stdiop x.file
-				data: x.data
+				data_edited: x.data
+				data_original: fs.readFileSync "problems/#{problems[req.params.p].folder}/editable/#{x.file}", "utf8"
 				language: problems[req.params.p].files[x.file]
 		if problems[req.params.p].sample
 			req.ret.sample = []

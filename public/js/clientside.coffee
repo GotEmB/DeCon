@@ -153,21 +153,59 @@ fLogout = -> $.get "logout", (d) ->
 fProblems = -> $.get "problems", (d) ->
 	d = d.sort()
 	$("#problems-contents").html ""
-	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{if d[i].done then "<span>&#10004;</span>" else ""}" for i in [0...d.length]
+	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{if d[i].done then "<span class='tickmark'>&#10004;</span>" else ""}" for i in [0...d.length]
 	$("#problems-contents div").addClass "ui-button ui-widget ui-widget-content ui-state-normal ui-button-text-only"
 	$("#problems-contents div").click -> fProblem $(this).children("span:nth-child(2)").text()
 	$("#problems-contents div").hover (-> $(this).addClass "ui-state-hover"), -> $(this).removeClass "ui-state-hover"
 	$("#problems-contents div").mousedown -> $(this).addClass "ui-state-focus"
 	$("#problems-contents div").mouseup -> $(this).removeClass "ui-state-focus"
-	$("#problems-contents").prepend "<div class=\"ui-widget ui-widget-content ui-corner-bottom\"></div>"
+	$("#problems-contents").prepend "<div class='ui-widget ui-widget-content ui-corner-bottom'></div>"
 
 fProblem = (p) -> $.get "problems/#{p}", (d) ->
 	$("#problem-header span:first-child").text p
 	$("#problem-header span:nth-child(2)").text "#{d.points} Point#{if d.points is 1 then "" else "s"}"
 	$("#problem-container").html ""
-	$("#problem-container").append "<div class=\"desc\">#{d.description}</div>"
+	$("#problem-container").append "<div class='desc'>#{d.description}</div>"
+	if $("#login-button").text() is "Logout"
+		$("#problem-container").append "<div id='editables-accordion'></div>"
+		for ed in d.editables
+			$("#editables-accordion").append """
+				<h3>
+					<a>#{ed.file}</a>
+				</h3>
+				<div class='ace-tabs'>
+					<div class='ace-container'></div>
+					<div class='ace-container'></div>
+					<div class='ace-tabbar' id='#{ed.file}_oe'>
+						<input type='radio' id='#{ed.file}_o' name='#{ed.file}_oe' /><label for='#{ed.file}_o'>Original</label>
+						<input type='radio' id='#{ed.file}_e' name='#{ed.file}_oe' /><label for='#{ed.file}_e'>Edited</label>
+						<span></span>
+					</div>
+				</div>
+				"""
+			original = ace.edit($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[0])
+			original.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
+			original.setShowPrintMargin false
+			original.getSession().setUseWrapMode true
+			original.setReadOnly true
+			original.getSession().setValue ed.data_original
+			$($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[0]).hide()
+			editor = ace.edit($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[1])
+			editor.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
+			editor.setShowPrintMargin false
+			editor.getSession().setUseWrapMode true
+			editor.getSession().setValue ed.data_edited
+			editor.getSession().on('change', fAceSave);
+			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").children("input")[1].checked = true
+			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").buttonset()
+			$("input[name='#{ed.file}_oe']").change -> $("#editables-accordion div.ace-tabs").last().children("div.ace-container").toggle()
+		$("#editables-accordion").accordion collapsible: true
 	$("#scoreboard-box").hide()
 	$("#problem-box").show()
+	$("#editables-accordion div.ace-tabs").height $("#problem-container").height() * 0.5 if $("#login-button").text() is "Logout"
+
+fAceSave = ->
+	console.log this
 
 fScoreboard = -> $.get "scoreboard", (d) ->
 	d = d.sort (a, b) -> a.rank - b.rank
@@ -180,7 +218,7 @@ fScoreboard = -> $.get "scoreboard", (d) ->
 		t.penalty = JSON.parseWithDate "\"#{t.penalty}\""
 		t.penalty = "#{pad2 t.penalty.getHours()}:#{pad2 t.penalty.getMinutes()}:#{pad2 t.penalty.getSeconds()}"
 		$("#scoreboard-data tbody tr:last-child").append "<td>#{h}</td>" for h in [t.rank, t.team, t.score, t.penalty]
-		$("#scoreboard-data tbody tr:last-child").append "<td#{if t.problemsdone.any((x) -> x.problem is h.textContent and x.done) then "" else " style=\"color: transparent\""}>&#10004;</td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)
+		$("#scoreboard-data tbody tr:last-child").append "<td#{if t.problemsdone.any((x) -> x.problem is h.textContent and x.done) then "" else " style=\"color: transparent\""}><span class='tickmark'>&#10004;</span></td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)
 	$("#scoreboard-data tr th").addClass "ui-widget ui-widget-header"
 	$("#scoreboard-data tr td").addClass "ui-widget ui-widget-content"
 	$("#problem-box").hide()

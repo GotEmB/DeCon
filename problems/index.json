@@ -8,9 +8,9 @@
 				"points": 1,
 				"sample": false,
 				"files": {
-					"source.cpp": "c++",
-					"stdout": "txt",
-					"stdin": "txt"
+					"source.cpp": "c_cpp",
+					"stdout": "text",
+					"stdin": "text"
 				},
 				"editable": ["source.cpp"],
 				"jobs": {

@@ -37,6 +37,12 @@ pre
 		padding: none;
 	}
 
+span.tickmark
+{
+	font-family: Arial Unicode MS, Lucida Grande;
+	margin: -2px 0;
+}
+
 #header
 {
 	display: box;
@@ -184,6 +190,19 @@ div.login-row input
 	overflow: hidden;
 }
 
+div.ui-widget-content.just-border
+{
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background: none;
+	pointer-events: none;
+	margin: -1px;
+	z-index: 5;
+}
+
 #scoreboard-header, #problem-header
 {
 	background-color: rgb(247, 247, 247);
@@ -191,6 +210,8 @@ div.login-row input
 	padding: 10px 0 9px;
 	text-align: center;
 	margin: -1px;
+	position: relative;
+	z-index: 1;
 }
 
 	#problem-header span:first-child
@@ -281,9 +302,49 @@ div.login-row input
 		text-align: left;
 	}
 
-#editor
+#editables-accordion div.ace-tabs
+{
+	overflow: none;
+}
+
+#editables-accordion div.ace-container
 {
 	position: absolute;
-	width: 100%;
-	height: 600px;
+	top: 0;
+	left: 0;
+	bottom: 25px;
+	right: 0;
+	padding: 0;
 }
+
+#editables-accordion .ui-accordion-header, #editables-accordion .ui-accordion-content
+{
+	border-width: 1px 0 0 0;
+}
+
+#editables-accordion div.ace-tabbar
+{
+	position: absolute;
+	height: 24px;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	border-top: 1px solid #B6B6B6;
+	padding: 0;
+	margin: 0;
+	background: rgb(247, 247, 247);
+	font-size: 0;
+}
+
+	#editables-accordion div.ace-tabbar label
+	{
+		display: inline-block;
+		border-radius: 0;
+		height: 24px;
+		margin: 0;
+		border-width: 0 1px 0 0;
+	}
+		#editables-accordion div.ace-tabbar label span
+		{
+			font-size: 12px;
+		}
