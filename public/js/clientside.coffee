@@ -179,7 +179,7 @@ fProblem = (p) -> $.get "problems/#{p}", (d) ->
 					<div class='ace-tabbar' id='#{ed.file}_oe'>
 						<input type='radio' id='#{ed.file}_o' name='#{ed.file}_oe' /><label for='#{ed.file}_o'>Original</label>
 						<input type='radio' id='#{ed.file}_e' name='#{ed.file}_oe' /><label for='#{ed.file}_e'>Edited</label>
-						<span></span>
+						<span class='status'></span>
 					</div>
 				</div>
 				"""
@@ -195,7 +195,20 @@ fProblem = (p) -> $.get "problems/#{p}", (d) ->
 			editor.setShowPrintMargin false
 			editor.getSession().setUseWrapMode true
 			editor.getSession().setValue ed.data_edited
-			editor.getSession().on('change', fAceSave);
+			saveStatus = $("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").children("span.status")
+			saveStatus.hide()
+			editor.getSession().on 'change', ->
+				clearTimeout editor.saveTimeout if editor.saveTimeout
+				editor.saveTimeout = setTimeout (->
+					saveStatus.show()
+					saveStatus.text "Saving..."
+					$.post "problems/#{p}/update",
+						file: ed.file
+						data: editor.getSession().getValue(),
+						(d) ->
+							saveStatus.text if d.success then "Saved" else "Error Saving!"
+							setTimeout (-> saveStatus.fadeOut 2000), 3000 if d.success
+				), 5000
 			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").children("input")[1].checked = true
 			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").buttonset()
 			$("input[name='#{ed.file}_oe']").change -> $("#editables-accordion div.ace-tabs").last().children("div.ace-container").toggle()
@@ -203,9 +216,6 @@ fProblem = (p) -> $.get "problems/#{p}", (d) ->
 	$("#scoreboard-box").hide()
 	$("#problem-box").show()
 	$("#editables-accordion div.ace-tabs").height $("#problem-container").height() * 0.5 if $("#login-button").text() is "Logout"
-
-fAceSave = ->
-	console.log this
 
 fScoreboard = -> $.get "scoreboard", (d) ->
 	d = d.sort (a, b) -> a.rank - b.rank

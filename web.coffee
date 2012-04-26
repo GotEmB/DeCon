@@ -145,6 +145,7 @@ Sync ->
 
 	# New Request -> New Fiber
 	server.get "/*", (req, res, next) -> Sync -> next()
+	server.post "/*", (req, res, next) -> Sync -> next()
 
 	# Get State
 	server.get "/state", (req, res, next) ->
@@ -278,6 +279,20 @@ Sync ->
 						data_after: fs.readFile.sync null, "problems/#{problems[req.params.p].folder}/sample/after/#{x}", "utf8"
 						language: problems[req.params.p].files[x]
 		res.send req.ret
+	
+	# Update Editable
+	server.post "/problems/:p/update", (req, res, next) ->
+		ed = (@t1 = db.FileDump).find.sync @t1, (
+			team: req.session.teamname
+			problem: req.params.p
+			file: req.body.file
+		)
+		if ed.length is 1
+			ed[0].data = req.body.data
+			(@t1 = db.FileDump).save.sync @t1, ed[0]
+			res.send success: true
+		else
+			res.send success: false
 
 	# Run
 	server.get "/problems/:p/run/:dcase", (req, res, next) ->

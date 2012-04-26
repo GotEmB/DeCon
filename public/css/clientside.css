@@ -344,7 +344,13 @@ div.ui-widget-content.just-border
 		margin: 0;
 		border-width: 0 1px 0 0;
 	}
-		#editables-accordion div.ace-tabbar label span
+		#editables-accordion div.ace-tabbar span
 		{
+			display: inline-block;
 			font-size: 12px;
 		}
+		
+			#editables-accordion div.ace-tabbar span.status
+			{
+				margin: 0 12px;
+			}
