@@ -302,12 +302,12 @@ div.ui-widget-content.just-border
 		text-align: left;
 	}
 
-#editables-accordion div.ace-tabs
+#editables-accordion div.ace-tabs, #stock-accordion div.ace-tabs
 {
 	overflow: none;
 }
 
-#editables-accordion div.ace-container
+#editables-accordion div.ace-container, #stock-accordion div.ace-container
 {
 	position: absolute;
 	top: 0;
@@ -315,14 +315,25 @@ div.ui-widget-content.just-border
 	bottom: 25px;
 	right: 0;
 	padding: 0;
+	overflow: auto;
 }
 
-#editables-accordion .ui-accordion-header, #editables-accordion .ui-accordion-content
+#editables-accordion .ui-accordion-header, #editables-accordion .ui-accordion-content, #stock-accordion .ui-accordion-header, #stock-accordion .ui-accordion-content
 {
 	border-width: 1px 0 0 0;
 }
 
-#editables-accordion div.ace-tabbar
+#editables-accordion h3, #stock-accordion h3
+{
+	margin-top: 0;
+}
+
+#editables-accordion div.ace-tabs, #stock-accordion div.ace-tabs
+{
+	margin-bottom: 0;
+}
+
+#editables-accordion div.ace-tabbar, #stock-accordion div.ace-tabbar
 {
 	position: absolute;
 	height: 24px;
@@ -336,7 +347,7 @@ div.ui-widget-content.just-border
 	font-size: 0;
 }
 
-	#editables-accordion div.ace-tabbar label
+	#editables-accordion div.ace-tabbar label, #stock-accordion div.ace-tabbar label
 	{
 		display: inline-block;
 		border-radius: 0;
@@ -344,7 +355,7 @@ div.ui-widget-content.just-border
 		margin: 0;
 		border-width: 0 1px 0 0;
 	}
-		#editables-accordion div.ace-tabbar span
+		#editables-accordion div.ace-tabbar span, #stock-accordion div.ace-tabbar span
 		{
 			display: inline-block;
 			font-size: 12px;

@@ -86,6 +86,8 @@ JSON.parseWithDate = (json) ->
 				return new Date(+b[0])
 		value
 
+dtu = (str) -> str.replace(".", "_").replace(" ", "_")
+
 # Entry Point
 $ ->
 	$("#login-form").dialog
@@ -147,6 +149,7 @@ fLogout = -> $.get "logout", (d) ->
 	$("#ranking-box div:first-child").html "<center>Scoreboard</center>"
 	$("#ranking-box div:last-child").text ""
 	$("#login-button span.ui-button-text").text "Login"
+	fProblems()
 	unless d.success
 		$.jAlert "There are no active sessions.", "highlight"
 
@@ -155,67 +158,121 @@ fProblems = -> $.get "problems", (d) ->
 	$("#problems-contents").html ""
 	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{if d[i].done then "<span class='tickmark'>&#10004;</span>" else ""}" for i in [0...d.length]
 	$("#problems-contents div").addClass "ui-button ui-widget ui-widget-content ui-state-normal ui-button-text-only"
-	$("#problems-contents div").click -> fProblem $(this).children("span:nth-child(2)").text()
+	$("#problems-contents div").click -> fProblem $(this).children("span:nth-child(2)")
 	$("#problems-contents div").hover (-> $(this).addClass "ui-state-hover"), -> $(this).removeClass "ui-state-hover"
 	$("#problems-contents div").mousedown -> $(this).addClass "ui-state-focus"
 	$("#problems-contents div").mouseup -> $(this).removeClass "ui-state-focus"
 	$("#problems-contents").prepend "<div class='ui-widget ui-widget-content ui-corner-bottom'></div>"
+	fScoreboard()
 
-fProblem = (p) -> $.get "problems/#{p}", (d) ->
-	$("#problem-header span:first-child").text p
+fProblem = (p) -> $.get "problems/#{p.text()}", (d) ->
+	$("#problem-header span:first-child").text p.text()
 	$("#problem-header span:nth-child(2)").text "#{d.points} Point#{if d.points is 1 then "" else "s"}"
 	$("#problem-container").html ""
 	$("#problem-container").append "<div class='desc'>#{d.description}</div>"
 	if $("#login-button").text() is "Logout"
 		$("#problem-container").append "<div id='editables-accordion'></div>"
 		for ed in d.editables
-			$("#editables-accordion").append """
-				<h3>
-					<a>#{ed.file}</a>
-				</h3>
-				<div class='ace-tabs'>
-					<div class='ace-container'></div>
-					<div class='ace-container'></div>
-					<div class='ace-tabbar' id='#{ed.file}_oe'>
-						<input type='radio' id='#{ed.file}_o' name='#{ed.file}_oe' /><label for='#{ed.file}_o'>Original</label>
-						<input type='radio' id='#{ed.file}_e' name='#{ed.file}_oe' /><label for='#{ed.file}_e'>Edited</label>
-						<span class='status'></span>
+			(->
+				$("#editables-accordion").append """
+					<h3>
+						<a>#{ed.file}</a>
+					</h3>
+					<div class='ace-tabs' id='#{dtu ed.file}_c'>
+						<div class='ace-container' id='#{dtu ed.file}_ao'></div>
+						<div class='ace-container' id='#{dtu ed.file}_ae'></div>
+						<div class='ace-tabbar' id='#{dtu ed.file}_oe'>
+							<input type='radio' id='#{dtu ed.file}_o' name='#{dtu ed.file}_oe' /><label for='#{dtu ed.file}_o'>Original</label>
+							<input type='radio' id='#{dtu ed.file}_e' name='#{dtu ed.file}_oe' /><label for='#{dtu ed.file}_e'>Edited</label>
+							<span class='status'></span>
+						</div>
 					</div>
-				</div>
-				"""
-			original = ace.edit($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[0])
-			original.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
-			original.setShowPrintMargin false
-			original.getSession().setUseWrapMode true
-			original.setReadOnly true
-			original.getSession().setValue ed.data_original
-			$($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[0]).hide()
-			editor = ace.edit($("#editables-accordion div.ace-tabs").last().children("div.ace-container")[1])
-			editor.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
-			editor.setShowPrintMargin false
-			editor.getSession().setUseWrapMode true
-			editor.getSession().setValue ed.data_edited
-			saveStatus = $("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").children("span.status")
-			saveStatus.hide()
-			editor.getSession().on 'change', ->
-				clearTimeout editor.saveTimeout if editor.saveTimeout
-				editor.saveTimeout = setTimeout (->
-					saveStatus.show()
-					saveStatus.text "Saving..."
-					$.post "problems/#{p}/update",
-						file: ed.file
-						data: editor.getSession().getValue(),
-						(d) ->
-							saveStatus.text if d.success then "Saved" else "Error Saving!"
-							setTimeout (-> saveStatus.fadeOut 2000), 3000 if d.success
-				), 5000
-			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").children("input")[1].checked = true
-			$("#editables-accordion div.ace-tabs").last().children("div.ace-tabbar").buttonset()
-			$("input[name='#{ed.file}_oe']").change -> $("#editables-accordion div.ace-tabs").last().children("div.ace-container").toggle()
+					"""
+				original = ace.edit($("##{dtu ed.file}_ao")[0])
+				original.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
+				original.setShowPrintMargin false
+				original.getSession().setUseWrapMode true
+				original.setReadOnly true
+				original.getSession().setValue ed.data_original
+				$("##{dtu ed.file}_ao").hide()
+				editor = ace.edit($("##{dtu ed.file}_ae")[0])
+				editor.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
+				editor.setShowPrintMargin false
+				editor.getSession().setUseWrapMode true
+				editor.getSession().setValue ed.data_edited
+				saveStatus = $("##{dtu ed.file}_c").children("span.status")
+				saveStatus.hide()
+				eed = ed.file
+				editor.getSession().on 'change', ->
+					clearTimeout editor.saveTimeout if editor.saveTimeout
+					editor.saveTimeout = setTimeout (->
+						saveStatus.show()
+						saveStatus.text "Saving..."
+						$.post "problems/#{p.text()}/update",
+							file: eed
+							data: editor.getSession().getValue(),
+							(d) ->
+								saveStatus.text if d.success then "Saved" else "Error Saving!"
+								setTimeout (-> saveStatus.fadeOut 2000), 3000 if d.success
+					), 3000
+				$("##{dtu ed.file}_e")[0].checked = true
+				$("##{dtu ed.file}_oe").buttonset()
+				c = $("##{dtu ed.file}_c")
+				$("input[name='#{dtu ed.file}_oe']").change -> c.children("div.ace-container").toggle()
+			)()
 		$("#editables-accordion").accordion collapsible: true
+		$("#problem-container").append "<div id='stock-accordion'></div>"
+		for ed, i in d.sample
+			(->
+				$("#stock-accordion").append """
+					<h3>
+						<a>#{ed.file}</a>
+					</h3>
+					<div class='ace-tabs' id='#{dtu ed.file}_c'>
+						<div class='ace-container' id='#{dtu ed.file}_a1'></div>
+						<div class='ace-container' id='#{dtu ed.file}_a2'></div>
+						<div class='ace-container' id='#{dtu ed.file}_a3'></div>
+						<div class='ace-tabbar' id='#{dtu ed.file}_oe'>
+							<input type='radio' id='#{dtu ed.file}_oe1' name='#{dtu ed.file}_oe' /><label for='#{dtu ed.file}_oe1'>Before Execution</label>
+							<input type='radio' id='#{dtu ed.file}_oe2' name='#{dtu ed.file}_oe' /><label for='#{dtu ed.file}_oe2'>Last Run</label>
+							<input type='radio' id='#{dtu ed.file}_oe3' name='#{dtu ed.file}_oe' /><label for='#{dtu ed.file}_oe3'>After Execution</label>
+						</div>
+					</div>
+					"""
+				for edt in [1, 2, 3]
+					ae = ace.edit($("##{dtu ed.file}_a#{edt}")[0])
+					ae.getSession().setMode new (require("ace/mode/#{ed.language}").Mode)
+					ae.setShowPrintMargin false
+					ae.getSession().setUseWrapMode true
+					ae.setReadOnly true
+					$("##{dtu ed.file}_a#{edt}").hide()
+					if edt is 1 and d.sample[i].data_before
+						ae.getSession().setValue ed.data_before
+						$("##{dtu ed.file}_oe#{edt}")[0].checked = true
+						$("##{dtu ed.file}_a#{edt}").show()
+					else if edt is 2
+						$("label[for='#{dtu ed.file}_oe#{edt}']").hide()
+					else if edt is 3 and d.sample[i].data_after
+						ae.getSession().setValue ed.data_after
+						unless $("##{dtu ed.file}_oe#{edt}")[0].checked
+							$("##{dtu ed.file}_oe#{edt}")[0].checked = true
+							$("##{dtu ed.file}_a#{edt}").show()
+					else
+						$("label[for='#{dtu ed.file}_oe#{edt}']").hide()
+				$("##{dtu ed.file}_oe").buttonset()
+				c = $("##{dtu ed.file}_c")
+				$("input[name='#{dtu ed.file}_oe']").change ->
+					c.children("div.ace-container").hide()
+					$("##{dtu ed.file}_a#{@id.charAt @id.length - 1}").show()
+			)()
+		$("#stock-accordion").accordion collapsible: true
+	$("#problems-contents div").removeClass "ui-state-active"
+	$("#problems-contents div").has(p).addClass "ui-state-active"
+	$("#ranking-box").removeClass "ui-state-active"
 	$("#scoreboard-box").hide()
 	$("#problem-box").show()
-	$("#editables-accordion div.ace-tabs").height $("#problem-container").height() * 0.5 if $("#login-button").text() is "Logout"
+	$("#editables-accordion div.ace-tabs").height $("#problem-container").height() * 0.4 if $("#login-button").text() is "Logout"
+	$("#stock-accordion div.ace-tabs").height $("#problem-container").height() * 0.2 if $("#login-button").text() is "Logout"
 
 fScoreboard = -> $.get "scoreboard", (d) ->
 	d = d.sort (a, b) -> a.rank - b.rank
@@ -231,5 +288,7 @@ fScoreboard = -> $.get "scoreboard", (d) ->
 		$("#scoreboard-data tbody tr:last-child").append "<td#{if t.problemsdone.any((x) -> x.problem is h.textContent and x.done) then "" else " style=\"color: transparent\""}><span class='tickmark'>&#10004;</span></td>" for h in $("#problems-contents div span:nth-child(2)").select (j) -> $(j)
 	$("#scoreboard-data tr th").addClass "ui-widget ui-widget-header"
 	$("#scoreboard-data tr td").addClass "ui-widget ui-widget-content"
+	$("#problems-contents div").removeClass "ui-state-active"
+	$("#ranking-box").addClass "ui-state-active"
 	$("#problem-box").hide()
 	$("#scoreboard-box").show()

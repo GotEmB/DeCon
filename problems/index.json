@@ -6,15 +6,17 @@
 			"Hello World!": {
 				"folder": "helloworld",
 				"points": 1,
-				"sample": false,
+				"sample": true,
 				"files": {
-					"source.cpp": "c_cpp",
+					"source[dot]cpp": "c_cpp",
+					"jeep[dot]js": "javascript",
 					"stdout": "text",
 					"stdin": "text"
 				},
-				"editable": ["source.cpp"],
+				"editable": ["source[dot]cpp", "jeep[dot]js"],
 				"jobs": {
-					"source.cpp": "g++"
+					"source[dot]cpp": "g++",
+					"jeep[dot]js": "js"
 				}
 			}
 		}

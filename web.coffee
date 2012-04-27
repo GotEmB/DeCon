@@ -1,7 +1,7 @@
 # Load Modules
 express = require("express")
 url = require("url")
-db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump" ])
+db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump", "Problems" ])
 md5 = require("MD5")
 fs = require("fs.extra")
 md = require("github-flavored-markdown")
@@ -12,6 +12,7 @@ http = require("http")
 cluster = require("cluster")
 request = require("request")
 mongoStore = require("connect-mongo")(express);
+path = require("path")
 
 # Global Vars
 problems = undefined
@@ -20,6 +21,7 @@ roundEnd = undefined
 port = undefined
 server = undefined
 useCluster = false
+updateProblemFolders = false
 
 # Fluent Stuff
 Object::toDictionary = ->
@@ -114,6 +116,41 @@ JSON.parseWithDate = (json) ->
 				return new Date(+b[0])
 		value
 
+# Dot The Dot
+dtd = (str) -> str.replace ".", "[dot]"
+tdt = (str) -> str.replace "[dot]", "."
+
+# Update Problem Folders
+if updateProblemFolders then Sync ->
+	console.log "Updating problem folders..."
+	ps = JSON.parseWithDate fs.readFile.sync null, "problems/index.json", "utf8"
+	console.log "Parsed index.json"
+	(@t1 = db.Problems).save.sync @t1,
+		index: "index"
+		rounds: ps
+	console.log "Updated index"
+	for p in fs.readdir.sync(null, "problems").where((x) -> x isnt "index.json")
+		pf = {}
+		pf.problem = p
+		pf.description = fs.readFile.sync(null, "problems/#{p}/description.md", "utf8")
+		pf.editables = {}
+		pf.editables[dtd file] = fs.readFile.sync(null, "problems/#{p}/editable/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/editable"
+		if path.existsSync "problems/#{p}/sample"
+			pf.sample = {}
+			pf.sample.before = {}
+			pf.sample.before[dtd file] = fs.readFile.sync(null, "problems/#{p}/sample/before/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/sample/before"
+			pf.sample.after = {}
+			pf.sample.after[dtd file] = fs.readFile.sync(null, "problems/#{p}/sample/after/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/sample/after"
+		pf.test = {}
+		pf.test.before = {}
+		pf.test.before[dtd file] = fs.readFile.sync(null, "problems/#{p}/test/before/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/test/before"
+		pf.test.after = {}
+		pf.test.after[dtd file] = fs.readFile.sync(null, "problems/#{p}/test/after/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/test/after"
+		(@t1 = db.Problems).save.sync @t1, pf
+		console.log "Updated #{p}"
+	console.log "Finished updating problem folders"
+return if updateProblemFolders
+
 # Setup workers
 if cluster.isMaster and useCluster
 	console.log "Worker started with pid #{cluster.fork().pid}" for [1..4]
@@ -134,7 +171,7 @@ Sync ->
 
 	# Entry Point
 	server.use (req, res, next) ->
-		console.log "Worker #{process.env.NODE_WORKER_ID}: Request URL: #{req.url}"
+		console.log "Worker #{process.env.NODE_WORKER_ID}: Request: #{req.url}"
 		req.url = "/index.html" if req.url is "/"
 		next()
 
@@ -170,7 +207,7 @@ Sync ->
 	server.get "/problems/:p", (req, res, next) ->
 		req.ret = {}
 		p = problems[req.params.p]
-		req.ret.description = md.parse fs.readFileSync "problems/#{p.folder}/description.md", "utf8"
+		req.ret.description = md.parse (@t1 = db.Problems).findOne.sync(@t1, problem: req.params.p).description
 		req.ret.points = p.points
 		next()
 
@@ -191,18 +228,19 @@ Sync ->
 	server.get "/*", (req, res, next) ->
 		setUpFileDump = (teamname) ->
 			for problemTitle of problems
+				problemFolder = (@t1 = db.Problems).findOne.sync(@t1, problem: problemTitle)
 				if problemTitle isnt "__proto__" and problemTitle isnt "toDictionary"
 					problems[problemTitle].editable.forEach (fileName) ->
 						if (@t1 = db.FileDump.find(
 							team: teamname
 							problem: problemTitle
-							file: fileName
+							file: tdt fileName
 						)).count.sync(@t1) is 0
 							(@t2 = db.FileDump).save.sync @t2,
 								team: teamname
 								problem: problemTitle
-								file: fileName
-								data: fs.readFileSync "problems/#{problems[problemTitle].folder}/editable/#{fileName}", "utf8"
+								file: tdt fileName
+								data: problemFolder.editables[fileName]
 		lurl = url.parse(req.url, true)
 		if lurl.pathname is "/logout"
 			if req.session.auth
@@ -253,31 +291,32 @@ Sync ->
 				"Standard Input"
 			else
 				file
+		problemFolder = (@t1 = db.Problems).findOne.sync(@t1, problem: req.params.p)
 		editables = (@t1 = db.FileDump).find.sync @t1,
 			team: req.session.teamname
 			problem: req.params.p
 		req.ret.editables = []
 		editables.forEach (x) ->
 			req.ret.editables.push
-				file: stdiop x.file
+				file: stdiop tdt x.file
 				data_edited: x.data
-				data_original: fs.readFileSync "problems/#{problems[req.params.p].folder}/editable/#{x.file}", "utf8"
-				language: problems[req.params.p].files[x.file]
+				data_original: problemFolder.editables[dtd x.file]
+				language: problems[req.params.p].files[dtd x.file]
 		if problems[req.params.p].sample
 			req.ret.sample = []
-			fs.readdir.sync(null, "problems/#{problems[req.params.p].folder}/sample/before").forEach (x) ->
+			problemFolder.sample.before.toDictionary().select((x) -> x.key).forEach (x) ->
 				req.ret.sample.push
-					file: stdiop x
-					data_before: fs.readFile.sync null, "problems/#{problems[req.params.p].folder}/sample/before/#{x}", "utf8"
-					language: problems[req.params.p].files[x]
-			fs.readdir.sync(null, "problems/#{problems[req.params.p].folder}/sample/after").forEach (x) ->
+					file: stdiop tdt x
+					data_before: problemFolder.sample.before[dtd x]
+					language: problems[req.params.p].files[dtd x]
+			problemFolder.sample.after.toDictionary().select((x) -> x.key).forEach (x) ->
 				if req.ret.sample.any((y) -> y.file) is x
-					req.ret.sample.first((y) -> y.file is x).data_after = fs.readFile.sync null, "problems/#{problems[req.params.p].folder}/sample/after/#{x}", "utf8"
+					req.ret.sample.first((y) -> y.file is x).data_after = problemFolder.sample.after[dtd x]
 				else
 					req.ret.sample.push
-						file: stdiop x
-						data_after: fs.readFile.sync null, "problems/#{problems[req.params.p].folder}/sample/after/#{x}", "utf8"
-						language: problems[req.params.p].files[x]
+						file: stdiop tdt x
+						data_after: problemFolder.sample.after[dtd x]
+						language: problems[req.params.p].files[dtd x]
 		res.send req.ret
 	
 	# Update Editable
@@ -311,7 +350,7 @@ Sync ->
 
 	# Start Server...
 	newRound = ->
-		pindex = JSON.parseWithDate(fs.readFile.sync(null, "problems/index.json", "utf8")).first((x) -> x.start <= new Date() and x.end >= new Date())
+		pindex = (@t1 = db.Problems).findOne.sync(@t1, index: "index").rounds.first((x) -> x.start <= new Date() and x.end >= new Date())
 		problems = pindex.problems
 		roundStart = pindex.start
 		roundEnd = pindex.end
