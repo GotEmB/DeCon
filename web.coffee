@@ -207,11 +207,11 @@ Sync ->
 		if lurl.pathname is "/logout"
 			if req.session.auth
 				req.session.destroy()
-				res.send JSON.stringify
+				res.send
 					success: true
 					message: "You will be remembered."
 			else
-				res.send JSON.stringify
+				res.send
 					success: false
 					message: "Who ARE you?"
 		else if lurl.pathname is "/login"
