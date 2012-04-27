@@ -126,6 +126,11 @@ fState = -> $.get "state", (d) ->
 	$("#timeleft-box div:first-child").text "Time Left"
 	fTimeleft JSON.parseWithDate "\"#{d.roundends}\""
 	fProblems()
+	fScore()
+
+fScore = -> $.get "score", (d) ->
+	$("#ranking-box div:last-child").text if d.rank is "Unranked" then "Unranked" else "##{d.rank}"
+	setTimeout (-> fScore()), 10000
 
 fTimeleft = (roundEnds) ->
 	d = new Date roundEnds - new Date()
@@ -200,7 +205,7 @@ fProblem = (p) -> $.get "problems/#{p.text()}", (d) ->
 				editor.setShowPrintMargin false
 				editor.getSession().setUseWrapMode true
 				editor.getSession().setValue ed.data_edited
-				saveStatus = $("##{dtu ed.file}_c").children("span.status")
+				saveStatus = $("##{dtu ed.file}_oe").children("span.status")
 				saveStatus.hide()
 				eed = ed.file
 				editor.getSession().on 'change', ->
@@ -213,7 +218,7 @@ fProblem = (p) -> $.get "problems/#{p.text()}", (d) ->
 							data: editor.getSession().getValue(),
 							(d) ->
 								saveStatus.text if d.success then "Saved" else "Error Saving!"
-								setTimeout (-> saveStatus.fadeOut 2000), 3000 if d.success
+								setTimeout (-> saveStatus.fadeOut 600), 3000 if d.success
 					), 3000
 				$("##{dtu ed.file}_e")[0].checked = true
 				$("##{dtu ed.file}_oe").buttonset()
@@ -292,3 +297,6 @@ fScoreboard = -> $.get "scoreboard", (d) ->
 	$("#ranking-box").addClass "ui-state-active"
 	$("#problem-box").hide()
 	$("#scoreboard-box").show()
+	setTimeout (->
+		fScoreboard() if $("#scoreboard-box").css("display") isnt "none"
+	), 10000
