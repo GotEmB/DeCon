@@ -120,17 +120,26 @@ fState = -> $.get "state", (d) ->
 		$("#ranking-box div:first-child").text d.team
 		$("#ranking-box div:last-child").text if d.rank is "Unranked" then "Unranked" else "##{d.rank}"
 		$("#login-button span.ui-button-text").text "Logout"
+		fScore()
 	else	
 		$("#ranking-box div:first-child").html "<center>Scoreboard</center>"
 		$("#login-button span.ui-button-text").text "Login"
 	$("#timeleft-box div:first-child").text "Time Left"
 	fTimeleft JSON.parseWithDate "\"#{d.roundends}\""
 	fProblems()
-	fScore()
 
 fScore = -> $.get "score", (d) ->
-	$("#ranking-box div:last-child").text if d.rank is "Unranked" then "Unranked" else "##{d.rank}"
-	setTimeout (-> fScore()), 10000
+	if $("#login-button span.ui-button-text").text() is "Logout"
+		$("#ranking-box div:last-child").text if d.rank is "Unranked" then "Unranked" else "##{d.rank}"
+		if $("#problems-contents:contains('Loading...)").length is 0
+			for p in d.submissions
+				if p.status is "submitted" then ss = "&#009881;"
+				if p.status is "correct" then ss = "&#10004;"
+				if p.status is "wrong" then ss = "&#10006;"
+				$("#problems-contents").children(":contains('#{p.problem}')").children("span").last().html ss
+	setTimeout (->
+		fScore() if $("#login-button span.ui-button-text").text() is "Logout"
+	), 10000
 
 fTimeleft = (roundEnds) ->
 	d = new Date roundEnds - new Date()
@@ -147,6 +156,7 @@ fLogin = (auth) -> $.get "login", auth, (d) ->
 		$("#login-form").dialog "close"
 		$("#login-button span.ui-button-text").text "Logout"
 		fProblems()
+		fScore()
 	else
 		$.jAlert "Invalid Teamname / Password!", "error"
 
@@ -161,7 +171,7 @@ fLogout = -> $.get "logout", (d) ->
 fProblems = -> $.get "problems", (d) ->
 	d = d.sort()
 	$("#problems-contents").html ""
-	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span>#{if d[i].done then "<span class='tickmark'>&#10004;</span>" else ""}" for i in [0...d.length]
+	$("#problems-contents").append "<div><span>#{i + 1}</span><span>#{d[i].title}</span><span class='tickmark'>#{if d[i].done then "&#10004;" else ""}</span>" for i in [0...d.length]
 	$("#problems-contents div").addClass "ui-button ui-widget ui-widget-content ui-state-normal ui-button-text-only"
 	$("#problems-contents div").click -> fProblem $(this).children("span:nth-child(2)")
 	$("#problems-contents div").hover (-> $(this).addClass "ui-state-hover"), -> $(this).removeClass "ui-state-hover"
@@ -176,6 +186,9 @@ fProblem = (p) -> $.get "problems/#{p.text()}", (d) ->
 	$("#problem-container").html ""
 	$("#problem-container").append "<div class='desc'>#{d.description}</div>"
 	if $("#login-button").text() is "Logout"
+		$("#problem-header span:nth-child(3)").text "Submit"
+		$("#problem-header span:nth-child(3)").button().click ->
+			$.get "/problems/#{p.text()}/run", (d) -> $.jAlert "Submitted Solution", "highlight"
 		$("#problem-container").append "<div id='editables-accordion'></div>"
 		for ed in d.editables
 			(->

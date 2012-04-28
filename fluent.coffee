@@ -79,6 +79,10 @@ Array::orderByDesc = (fun) ->
 	ret.sort (a, b) -> fun(b) - fun(a)
 	ret
 
+Array::distinct = (fun) ->
+	g1 = @groupBy fun
+	g1.select (x) -> x.values[0]
+
 # JSON extension
 JSON.parseWithDate = (json) ->
 	reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/

@@ -1,7 +1,7 @@
 # Load Modules
 express = require("express")
 url = require("url")
-db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump", "Problems" ])
+db = require("mongojs").connect(process.env.MONGOLAB_URI, [ "Teams", "FileDump", "Problems", "Submissions" ])
 md5 = require("MD5")
 fs = require("fs.extra")
 md = require("github-flavored-markdown")
@@ -124,7 +124,7 @@ Sync ->
 
 	# Scoreboard
 	server.get "/scoreboard", (req, res, next) ->
-		tret = (@t1 = db.Teams).find.sync(t1).select (x) ->
+		tret = (@t1 = db.Teams).find.sync(@t1).select (x) ->
 			team: x.teamname
 			problemsdone: problems.toDictionary().select (y) ->
 				problem: y.key
@@ -233,7 +233,12 @@ Sync ->
 	# Score Update
 	server.get "/score", (req, res, next) ->
 		score = JSON.parseWithDate(request.sync(null, "#{process.env.HOST}/scoreboard")[1]).first((x) -> x.team is req.session.teamname)
-		res.send rank: if score then score.rank else "Unranked"
+		submissions = (@t1 = db.Submissions).find.sync(@t1, team: req.session.teamname).orderByDesc((x) -> x.time).distinct((x) -> x.problem)
+		res.send
+			rank: if score then score.rank else "Unranked"
+			submissions: submissions.select (x) ->
+				problem: x.problem
+				status: x.status
 	
 	# Update Editable
 	server.post "/problems/:p/update", (req, res, next) ->
@@ -250,16 +255,48 @@ Sync ->
 			res.send success: false
 
 	# Run
-	server.get "/problems/:p/run/:dcase", (req, res, next) ->
-		cnd.run req, res, next, problems, db
-		problemFolder = req.ret.problemFolder
-		req.ret.problemFolder = undefined
-		if req.params.dcase is "sample"
-			req.ret.files = {}
-			req.ret.files[tdt x.key] = fs.readFile.sync null, "#{req.ret.folder}/#{x.key}", "utf8" for x in problemFolder[req.params.dcase].after.toDictionary()
-		(@t1 = childProcess("rm", ["-r", req.ret.folder])).on.sync @t1, "exit"
-		req.ret.folder = undefined
+	server.get "/problems/:p/run", (req, res, next) ->
+		(@t1 = db.Submissions).save.sync @t1,
+			team: req.session.teamname
+			problem: req.params.p
+			time: new Date()
+			status: "submitted"
+			hash: md5 "Submissions" + req.params.p + req.session.teamname + (new Date()).getTime()
+		res.send
+			status: "submitted"
+
+	# Get Submissions
+	server.get "/checksubmissions", (req, res, next) ->
+		if req.session.teamname isnt "Code Kangaroos" then next()
+		ss = (@t1 = db.Submissions).find.sync @t1, status: "submitted"
+		req.ret = []
+		for se in ss
+			te =
+				team: se.team
+				problem: se.problem
+				time: se.time
+				hash: se.hash
+				files: {}
+			tm = (@t1 = db.FileDump).find.sync
+				team: req.session.teamname
+				problem: se.problem
+			te.files[x.file] = x.data for x in tm
+			req.ret.push te
 		res.send req.ret
+
+	# Validate Submissions
+	server.get "/validatesubmissions/:hash/:vd", (req, res, next) ->
+		if req.session.teamname isnt "Code Kangaroos" then next()
+		ss = (@t1 = db.Submissions).find.sync @t1, hash: req.params.hash
+		ss.status = req.params.vd
+		(@t1 = db.Submissions).save.sync @t1, ss
+		if req.params.vd is "correct"
+			tt = (@t1 = db.Teams).find.sync teamname: ss.team
+			tt.problemsdone[ss.problem] = ss.time
+			tt = (@t1 = db.Teams).save.sync teamname: ss.team
+		res.send
+			result: true
+			submission: ss
 
 	# 404
 	server.get "/*", (req, res) -> res.send "You hack me bro?<br>404! Fus-Ro-Dah !!!"
@@ -274,4 +311,5 @@ Sync ->
 		nextRound.start()
 	newRound()
 	port = process.env.PORT or 5000
+	console.log "Worker #{process.env.NODE_WORKER_ID}: Starting Server..."
 	server.listen port, -> console.log "Worker #{process.env.NODE_WORKER_ID}: Listening on port #{port}"
