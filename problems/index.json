@@ -1,22 +1,97 @@
 [
 	{
-		"start": "2012-04-16T16:00:00.000Z",
-		"end": "2012-04-29T16:00:00.000Z",
+		"start": "2012-04-28T10:00:00.000Z",
+		"end": "2012-04-28T13:30:00.000Z",
 		"problems": {
-			"Hello World!": {
-				"folder": "helloworld",
-				"points": 1,
+			"Anyone can code": {
+				"points": 3,
 				"sample": true,
 				"files": {
-					"source[dot]cpp": "c_cpp",
-					"jeep[dot]js": "javascript",
+					"HandiBiryani[dot]chef": "chef",
 					"stdout": "text",
 					"stdin": "text"
 				},
-				"editable": ["source[dot]cpp", "jeep[dot]js"],
+				"editable": ["HandiBiryani[dot]chef"],
 				"jobs": {
-					"source[dot]cpp": "g++",
-					"jeep[dot]js": "js"
+					"HandiBiryani[dot]chef": "chef"
+				}
+			},
+			"Baboon": {
+				"points": 1,
+				"sample": true,
+				"files": {
+					"baboon[dot]bf": "bf",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["baboon[dot]bf"],
+				"jobs": {
+					"baboon[dot]bf": "bf"
+				}
+			},
+			"C meets Web": {
+				"points": 1,
+				"sample": true,
+				"files": {
+					"ipl[dot]c": "c_cpp",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["ipl[dot]c"],
+				"jobs": {
+					"ipl[dot]c": "gcc"
+				}
+			},
+			"Cat++": {
+				"points": 2,
+				"sample": true,
+				"files": {
+					"IKNOESMATHS[dot]lol": "lol",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["IKNOESMATHS[dot]lol"],
+				"jobs": {
+					"IKNOESMATHS[dot]lol": "lol"
+				}
+			},
+			"Change": {
+				"points": 3,
+				"sample": true,
+				"files": {
+					"change[dot]cs": "cs",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["change[dot]cs"],
+				"jobs": {
+					"change[dot]cs": "cs"
+				}
+			},
+			"Crime Control": {
+				"points": 4,
+				"sample": true,
+				"files": {
+					"main[dot]m": "objC",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["main[dot]m"],
+				"jobs": {
+					"main[dot]m": "objC"
+				}
+			},
+			"Debug another day": {
+				"points": 2,
+				"sample": true,
+				"files": {
+					"mission[dot]fs": "fs",
+					"stdout": "text",
+					"stdin": "text"
+				},
+				"editable": ["mission[dot]fs"],
+				"jobs": {
+					"mission[dot]fs": "fs"
 				}
 			}
 		}

@@ -40,12 +40,12 @@ if updateProblemFolders then Sync ->
 		index: "index"
 		rounds: ps
 	console.log "Updated index"
-	for p in fs.readdir.sync(null, "problems").where((x) -> x isnt "index.json")
+	for p in fs.readdir.sync(null, "problems").where((x) -> x isnt "index.json" and x isnt ".DS_Store")
 		pf = {}
 		pf.problem = p
-		pf.description = fs.readFile.sync(null, "problems/#{p}/description.md", "utf8")
+		pf.description = fs.readFile.sync(null, "problems/#{p}/problem.md", "utf8")
 		pf.editables = {}
-		pf.editables[dtd file] = fs.readFile.sync(null, "problems/#{p}/editable/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/editable"
+		pf.editables[dtd file] = fs.readFile.sync(null, "problems/#{p}/editables/#{file}", "utf8") for file in fs.readdir.sync null, "problems/#{p}/editables"
 		if path.existsSync "problems/#{p}/sample"
 			pf.sample = {}
 			pf.sample.before = {}

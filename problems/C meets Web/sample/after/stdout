@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<head>
+</head>
+<body>
+<table><tr><th>S.No</th><th>Name</th><th>Runs</th><th>Balls faced</th></tr>
+<tr>
+<td>1</td><td>Kevin</td><td>103</td><td>64</td>
+</tr>
+<tr>
+<td>2</td><td>Dravid</td><td>26</td><td>25</td>
+</tr>
+<tr>
+<td>3</td><td>Clarke</td><td>25</td><td>56</td>
+</tr></table></body></html>
